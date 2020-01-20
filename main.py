@@ -4,6 +4,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 import os
 import torch
 import PIL
+import time
 from common_functions import detectFace
 from common_functions import loadEmbeddings
 #tests if torch library can use gpu if not not it chooses cpu
@@ -12,7 +13,10 @@ print('Running on device: {}'.format(device))
 
 #initializes MTCNN face detector, we want MTCNN to detect more than one face => keep_all = True 
 #
+all_embeddings = loadEmbeddings()
 
+print('loaded students: ' , *all_embeddings.keys())
+print('*'*30)
 mtcnn = MTCNN(
         image_size=160, margin=0, min_face_size=20,
         thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
@@ -23,6 +27,7 @@ mtcnn = MTCNN(
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
 all_embeddings = loadEmbeddings()
+
 #
 capture = cv2.VideoCapture(0)
 while(True):
@@ -58,10 +63,26 @@ while(True):
             #torch.stack method accepts python array not tuples 
             aligned = [i for i in aligned]
             aligned = torch.stack(aligned).to(device)
-            embeddings = resnet(aligned).detach().cpu()
-            #print('embeddings: {}'.format(embeddings))
-            
+            calculatedEmbeddings = resnet(aligned).detach().cpu()
+
+            #print('embeddings: {}'.format(calculatedEmbeddings))
+            dist_dict = dict()
+            for key in all_embeddings:
+                dist_arr = []
+                for embeddings in all_embeddings[key]:
+                    dist = (calculatedEmbeddings - embeddings).norm().item()
+                    dist_arr.append (dist)
+                print('{} distances are: {}'.format(key ,dist_arr))
+                min_dist = min(dist_arr)  
+                dist_dict[min_dist] = key
+                print('{} minimum  distance is : {}'.format(key , min_dist) ,'')
+            min_dist = min(dist_dict.keys())
+            nearest_student = dist_dict.get(min_dist)
+            print(' student is likely to be: {} '.format(nearest_student).center(80,'*'))
+            probability = (2 - min_dist)*100
+            print(' degree of certainty is: {}% '.format('DD.D').center(80,'*'))
     cv2.imshow('Infinity Project', frame)
+    time.sleep(0.2)
 	#to break from main loop if user presses ESC
     if cv2.waitKey(1) == 27:
         break
