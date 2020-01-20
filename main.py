@@ -4,7 +4,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 import os
 import torch
 import PIL
-
+from common_functions import detectFace
 #tests if torch library can use gpu if not not it chooses cpu
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Running on device: {}'.format(device))
@@ -21,25 +21,15 @@ mtcnn = MTCNN(
 
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-def detectFace(frame):
-#mtcnn.detect method accept PIL Image arguement	
-    frame_PIL = PIL.Image.fromarray(frame)
-    
-    aligned ,_ = mtcnn(frame_PIL,return_prob=True,save_path='detected_faces/face.jpg');
-    boxes,prob = mtcnn.detect(frame_PIL)
-    if boxes is not None:
-         print('Faces detected: ',len(boxes) ,',with probabilities :' ,prob)
-    else:
-        print("no faces detected")
-    return boxes,aligned
 
+#
 capture = cv2.VideoCapture(0)
 while(True):
      
     ret, frame = capture.read()
   
-     
-    boxes,aligned = detectFace(frame)
+    frame_PIL = PIL.Image.fromarray(frame)
+    boxes,aligned = detectFace(mtcnn,frame_PIL,'detected_faces/face.jpg')
 
     #draw a red border around detected faces
     if boxes is not None:
