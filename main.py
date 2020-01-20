@@ -56,6 +56,11 @@ while(True):
             endpoint = (boxes_int[i][2],boxes_int[i][3] + label_height) #x1 y1+h
             cv2.rectangle(frame,startpoint,endpoint,(0,0,255),-1) 
 
+            #textOrigin starting bottom left point and a bottom margin
+            textOrigin = (startpoint[0] ,endpoint[1] - label_height // 5) 
+            fontscale = label_height /40 
+            cv2.putText(frame,'#00000',textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255))
+
     cv2.imshow('Infinity Project', frame)
 	#to break from main loop if user presses ESC
     if cv2.waitKey(1) == 27:
