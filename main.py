@@ -40,8 +40,7 @@ while(True):
             startpoint = (boxes_int[i][0],boxes_int[i][1]) #x0 y0
             endpoint = (boxes_int[i][2],boxes_int[i][3]) #x1 y1
             cv2.rectangle(frame,startpoint,endpoint,(0,0,255),2)  
-            print('face ' , i ,': coordinates',startpoint ,endpoint)
-
+            print('face {} : coordinates {} , {}'.format(i,startpoint,endpoint))
             #calculating coordiantes for the label rectangle
             startpoint = (boxes_int[i][0],boxes_int[i][3]) #x0 y1
             label_height = ((boxes_int[i][3] - boxes_int[i][1]) // 4)
@@ -59,7 +58,7 @@ while(True):
             aligned = [i for i in aligned]
             aligned = torch.stack(aligned).to(device)
             embeddings = resnet(aligned).detach().cpu()
-            print('\n',embeddings, '\n')
+            #print('embeddings: {}'.format(embeddings))
             
     cv2.imshow('Infinity Project', frame)
 	#to break from main loop if user presses ESC

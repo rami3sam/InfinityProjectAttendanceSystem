@@ -1,4 +1,5 @@
 import re
+import pickle
 import os
 import cv2
 import numpy as np
@@ -21,13 +22,30 @@ mtcnn = MTCNN(
         device=device,select_largest=True
 )
 
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
+all_embeddings = []
 
 for (dirpath, dirnames, filenames) in os.walk("students_photos"):
+
+    #regualar expression to assert its a direct subdirectory to exclude cropped versions
     if re.match(r'^students_photos/\w*$',dirpath):
         for filename in filenames:
-            os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True) 
-            fullpath = os.path.join(dirpath ,filename)
-            image = PIL.Image.open(fullpath)
-            fullpathCropped = os.path.join(dirpath ,'cropped', filename)
-            boxes,aligned = detectFace(mtcnn,image,fullpathCropped)
-            print('successfully done : {}'.format(fullpath))
+            #checking if the file is .jpg to exclude embeddings
+            if re.match(r'.*.jpg$' , filename):
+                
+                os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True) 
+                fullpath = os.path.join(dirpath ,filename)
+                image = PIL.Image.open(fullpath)
+                fullpathCropped = os.path.join(dirpath ,'cropped', filename)
+                boxes,aligned = detectFace(mtcnn,image,fullpathCropped)
+                print('successfully done : {}'.format(fullpath))
+
+                embeddings = resnet(aligned.unsqueeze(0))
+                all_embeddings.append(embeddings)
+                #print('embeddings: {}'.format(embeddings))
+                embeddingsPath = os.path.join(dirpath,"embeddings")
+
+                with open(embeddingsPath, 'wb') as embeddingsFile:
+                    pickle.dump(all_embeddings,embeddingsFile)
+            
