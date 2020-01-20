@@ -24,7 +24,7 @@ mtcnn = MTCNN(
 
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-all_embeddings = []
+all_embeddings = dict()
 
 for (dirpath, dirnames, filenames) in os.walk("students_photos"):
 
@@ -33,7 +33,8 @@ for (dirpath, dirnames, filenames) in os.walk("students_photos"):
         for filename in filenames:
             #checking if the file is .jpg to exclude embeddings
             if re.match(r'.*.jpg$' , filename):
-                
+                if all_embeddings.get(dirpath,None) is None:
+                    all_embeddings[dirpath] = []
                 os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True) 
                 fullpath = os.path.join(dirpath ,filename)
                 image = PIL.Image.open(fullpath)
@@ -42,10 +43,12 @@ for (dirpath, dirnames, filenames) in os.walk("students_photos"):
                 print('successfully done : {}'.format(fullpath))
 
                 embeddings = resnet(aligned.unsqueeze(0))
-                all_embeddings.append(embeddings)
+                all_embeddings[dirpath].append(embeddings)
                 #print('embeddings: {}'.format(embeddings))
-                embeddingsPath = os.path.join(dirpath,"embeddings")
+               
 
-                with open(embeddingsPath, 'wb') as embeddingsFile:
-                    pickle.dump(all_embeddings,embeddingsFile)
+for key in all_embeddings:
+    embeddingsPath = os.path.join(key,"embeddings")
+    with open(embeddingsPath, 'wb') as embeddingsFile:
+        pickle.dump(all_embeddings[key],embeddingsFile)
             
