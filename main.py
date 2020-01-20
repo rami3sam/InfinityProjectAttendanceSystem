@@ -5,8 +5,6 @@ import os
 import torch
 import PIL
 
-#tests the host operating system windows or not and sets workers value accordingly
-workers = 0 if os.name == 'nt' else 4
 #tests if torch library can use gpu if not not it chooses cpu
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Running on device: {}'.format(device))
@@ -21,15 +19,19 @@ mtcnn = MTCNN(
         keep_all=True,
 )
 
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
 def detectFace(frame):
 #mtcnn.detect method accept PIL Image arguement	
     frame_PIL = PIL.Image.fromarray(frame)
+    
+    aligned ,_ = mtcnn(frame_PIL,return_prob=True,save_path='detected_faces/face.jpg');
     boxes,prob = mtcnn.detect(frame_PIL)
     if boxes is not None:
          print('Faces detected: ',len(boxes) ,',with probabilities :' ,prob)
     else:
         print("no faces detected")
-    return boxes
+    return boxes,aligned
 
 capture = cv2.VideoCapture(0)
 while(True):
@@ -37,7 +39,7 @@ while(True):
     ret, frame = capture.read()
   
      
-    boxes = detectFace(frame)
+    boxes,aligned = detectFace(frame)
 
     #draw a red border around detected faces
     if boxes is not None:
@@ -60,7 +62,15 @@ while(True):
             textOrigin = (startpoint[0] ,endpoint[1] - label_height // 5) 
             fontscale = label_height /40 
             cv2.putText(frame,'#00000',textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255))
+            
+            #caculate face embedding
 
+            #torch.stack method accepts python array not tuples 
+            aligned = [i for i in aligned]
+            aligned = torch.stack(aligned).to(device)
+            embeddings = resnet(aligned).detach().cpu()
+            print('\n',embeddings, '\n')
+            
     cv2.imshow('Infinity Project', frame)
 	#to break from main loop if user presses ESC
     if cv2.waitKey(1) == 27:
