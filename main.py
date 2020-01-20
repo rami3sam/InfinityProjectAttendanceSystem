@@ -5,6 +5,7 @@ import os
 import torch
 import PIL
 from common_functions import detectFace
+from common_functions import loadEmbeddings
 #tests if torch library can use gpu if not not it chooses cpu
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print('Running on device: {}'.format(device))
@@ -21,7 +22,7 @@ mtcnn = MTCNN(
 
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
-
+all_embeddings = loadEmbeddings()
 #
 capture = cv2.VideoCapture(0)
 while(True):
