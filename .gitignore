@@ -13,5 +13,4 @@ test.py
 .cache
 .ipython
 .local
-students_photos/*
-detected_faces/*
+
