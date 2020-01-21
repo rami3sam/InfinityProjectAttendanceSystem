@@ -43,7 +43,7 @@ def drawOnFrame(i,frame,boxes,student_id):
     #textOrigin starting bottom left point and a bottom margin
     textOrigin = (startpoint[0] ,endpoint[1] - label_height // 5) 
     fontscale = label_height /40 
-    cv2.putText(frame,student_id,textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255))
+    cv2.putText(frame,student_id,textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255),2)
 
 
     #caculate face embedding
