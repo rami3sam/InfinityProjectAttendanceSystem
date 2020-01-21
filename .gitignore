@@ -13,4 +13,4 @@ test.py
 .cache
 .ipython
 .local
-
+log.txt

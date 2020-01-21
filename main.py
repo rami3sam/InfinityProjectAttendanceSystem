@@ -5,38 +5,32 @@ import os
 import torch
 import PIL
 import time
-from common_functions import detectFace
-from common_functions import loadEmbeddings
-from common_functions import drawOnFrame
-from common_functions import calculateEmbeddingsErrors
+import logging
+import core_functions
 from flask import Flask, render_template, Response
-#checks if torch library can use gpu if not not it chooses cpu
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print('Running on device: {}'.format(device))
+
+
+logging.basicConfig(filename='log.txt',filemode='w',level=logging.INFO)
+
 #initialize MTCNN face detector
-mtcnn = MTCNN(
-        image_size=160, margin=0, min_face_size=20,
-        thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
-        device=device,
-        keep_all=True,
-)
+mtcnn = core_functions.initializeMTCNN(True,False)
 #Initialize ResNet Inception Model
-resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(core_functions.device)
 #Load precalculated students embeddings
-all_embeddings = loadEmbeddings()
-print('loaded students: ' , *all_embeddings.keys())
-print('*'*80)
+all_embeddings = core_functions.loadEmbeddings()
+logging.info('loaded students: {}'.format([*all_embeddings.keys()]))
+logging.info('*'*80)
 capture = cv2.VideoCapture(0)
 app = Flask(__name__)
 
 def process():    
     ret, frame = capture.read()
     image = PIL.Image.fromarray(frame)
-    boxes,aligned = detectFace(mtcnn,image,'detected_faces/face.jpg')
+    boxes,aligned = core_functions.detectFace(mtcnn,image,'detected_faces/face.jpg')
     if boxes is not None:
         for i in range(0,len(boxes)):
-            calculateEmbeddingsErrors(resnet,device,aligned,all_embeddings)
-            drawOnFrame(i,frame,boxes,"#????")
+            core_functions.calculateEmbeddingsErrors(resnet,aligned,all_embeddings)
+            core_functions.drawOnFrame(i,frame,boxes,"#????")
     time.sleep(1/10) #1/fps
 	#to break from main loop if user presses ESC
     return frame;
