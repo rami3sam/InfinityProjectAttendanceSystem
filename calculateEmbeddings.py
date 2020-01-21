@@ -17,7 +17,7 @@ print('Running on device: {}'.format(device))
 #initializes MTCNN face detector, we want MTCNN to detect more than one face => keep_all = True 
 #
 
-mtcnn = core_functions.initializeMTCNN(False,True)
+mtcnn = core_functions.initializeMTCNN(False ,True)
 
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 

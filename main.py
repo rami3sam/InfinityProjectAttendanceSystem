@@ -6,11 +6,17 @@ import torch
 import PIL
 import time
 import logging
+import json
 import core_functions
 from flask import Flask, render_template, Response
 
+recognized_students_list = dict()
+recognized_students_list_buffer = dict()
 
-logging.basicConfig(filename='log.txt',filemode='w',level=logging.INFO)
+logger = logging.getLogger('infinity')
+handler = logging.FileHandler('log.txt')
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 #initialize MTCNN face detector
 mtcnn = core_functions.initializeMTCNN(True,False)
@@ -18,20 +24,26 @@ mtcnn = core_functions.initializeMTCNN(True,False)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(core_functions.device)
 #Load precalculated students embeddings
 all_embeddings = core_functions.loadEmbeddings()
-logging.info('loaded students: {}'.format([*all_embeddings.keys()]))
-logging.info('*'*80)
-capture = cv2.VideoCapture(0)
+logger.info('loaded students: {}'.format([*all_embeddings.keys()]))
+logger.info('*'*80)
+capture = cv2.VideoCapture(2)
 app = Flask(__name__)
 
-def process():    
+def process():   
+    global recognized_students_list_buffer
+    global recognized_students_list
+    recognized_students_list_buffer = dict()
     ret, frame = capture.read()
     image = PIL.Image.fromarray(frame)
     boxes,aligned = core_functions.detectFace(mtcnn,image,'detected_faces/face.jpg')
     if boxes is not None:
         for i in range(0,len(boxes)):
-            core_functions.calculateEmbeddingsErrors(resnet,aligned,all_embeddings)
-            core_functions.drawOnFrame(i,frame,boxes,"#????")
-    time.sleep(1/10) #1/fps
+           
+            id, student_name = core_functions.calculateEmbeddingsErrors(resnet,aligned,all_embeddings)
+            
+            core_functions.drawOnFrame(i,frame,boxes,'#{:04d}'.format(id))
+            recognized_students_list_buffer[id] = student_name
+    recognized_students_list = recognized_students_list_buffer
 	#to break from main loop if user presses ESC
     return frame;
 
@@ -57,14 +69,24 @@ def video_viewer():
     return Response(video_stream(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/recognized_students')
+def recognized_students():
+    return Response(json.dumps(recognized_students_list))
+
+@app.teardown_appcontext
+def teardown(x):
+    handler.flush()
+    
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
+
 
 
     
 #clean up and free allocated resources
 
 capture.release()
-
 
 
