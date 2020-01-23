@@ -14,16 +14,8 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 logger.info('Running on device: {}'.format(device))
 
 STUDENTS_PHOTOS_DIR = 'students_photos'
+DETECTED_FACES_DIR = 'detected_faces'
 
-def detectFace(mtcnn,image,filename):
-    alignedFaces ,_ = mtcnn(image,return_prob=True,save_path=filename);
-    boundingBoxes,probabilites = mtcnn.detect(image)
-    if boundingBoxes is not None:
-        logger.info('Faces detected: {} with probabilites: {} '
-        .format(len(boundingBoxes) , probabilites))
-    else:
-        logger.info("no faces detected")
-    return boundingBoxes,alignedFaces
 
 def loadStudents():
 
@@ -37,19 +29,19 @@ def loadStudents():
                 with open(studentFilePath,'rb') as studentFile:       
                     student = pickle.load(studentFile)
                     students[student.name] = student
-           
     return students
-def drawOnFrame(i,frame,boundingBoxes,studentID):
+
+def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
     boundingBoxes = np.array(boundingBoxes,dtype='int')
     #calculating coordinates for the border rectangle 
-    startingPoint = (boundingBoxes[i][0],boundingBoxes[i][1]) #x0 y0
-    endingPoint = (boundingBoxes[i][2],boundingBoxes[i][3]) #x1 y1
+    startingPoint = (boundingBoxes[faceNumber][0],boundingBoxes[faceNumber][1]) #x0 y0
+    endingPoint = (boundingBoxes[faceNumber][2],boundingBoxes[faceNumber][3]) #x1 y1
     cv2.rectangle(frame,startingPoint,endingPoint,(0,0,255),2)  
-    logger.info('face {} : coordinates {} , {}'.format(i,startingPoint,endingPoint))
+    logger.info('face {} : coordinates {} , {}'.format(faceNumber,startingPoint,endingPoint))
     #calculating coordiantes for the label rectangle
-    startingPoint = (boundingBoxes[i][0],boundingBoxes[i][3]) #x0 y1
-    label_height = ((boundingBoxes[i][3] - boundingBoxes[i][1]) // 4)
-    endingPoint = (boundingBoxes[i][2],boundingBoxes[i][3] + label_height) #x1 y1+h
+    startingPoint = (boundingBoxes[faceNumber][0],boundingBoxes[faceNumber][3]) #x0 y1
+    label_height = ((boundingBoxes[faceNumber][3] - boundingBoxes[faceNumber][1]) // 4)
+    endingPoint = (boundingBoxes[faceNumber][2],boundingBoxes[faceNumber][3] + label_height) #x1 y1+h
     cv2.rectangle(frame,startingPoint,endingPoint,(0,0,255),-1) 
 
     #textOrigin starting bottom left point and a bottom margin
@@ -61,7 +53,7 @@ def drawOnFrame(i,frame,boundingBoxes,studentID):
     #caculate face embedding
 def calculateEmbeddingsErrors(resnet,alignedFaces,students):
     #torch.stack method accepts python array not tuples 
-    alignedFaces = [i for i in alignedFaces]
+    alignedFaces = [*alignedFaces]
     alignedFaces = torch.stack(alignedFaces).to(device)
     calculatedEmbeddings = resnet(alignedFaces).detach().cpu()
 
@@ -77,17 +69,13 @@ def calculateEmbeddingsErrors(resnet,alignedFaces,students):
         logger.info('{} minimum  distance is : {}'.format(studentName , minimumDistance))
     minimumDistance = min(minimumDistanceDict.keys())
     closestStudentName = minimumDistanceDict.get(minimumDistance)
-    closestStudentID = 0 #0 is placeholder
+    closestStudentId = 0 #0 is placeholder
     logger.info(' student is likely to be: {} '.format(closestStudentName).center(80,'*'))
     logger.info(' least distance is: {} '.format(minimumDistance).center(80,'*'))
 
-    return closestStudentID,closestStudentName
+    return closestStudentId,closestStudentName
 
-def initializeMTCNN(keepAll,selectLargestFace):
-    return MTCNN(
-    image_size=160, margin=0, min_face_size=20,
-    thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
-    device=device,select_largest=selectLargestFace,keep_all=keepAll)       
+       
 
 def createLogger(loggerName,logFilename,logToConsole):
     logger = logging.getLogger(loggerName)

@@ -1,27 +1,27 @@
 import cv2
 import numpy as np
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from facenet_pytorch import InceptionResnetV1
 import os
 import torch
 import PIL
 import time
 import logging
 import json
-import core_functions
+from core_functions import *
+
+from classes import *
 from flask import Flask, render_template, Response
 
 recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
-logger = core_functions.createLogger('infinity','log.txt',True)
-
-
+logger = createLogger('infinity','log.txt',True)
 
 #initialize MTCNN face detector
-mtcnn = core_functions.initializeMTCNN(True,False)
+faceDetector = MTCNNFaceDetector(device,True,False)
 #Initialize ResNet Inception Model
-resnet = InceptionResnetV1(pretrained='vggface2').eval().to(core_functions.device)
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 #Load precalculated students embeddings
-students = core_functions.loadStudents()
+students = loadStudents()
 logger.info('loaded students: {}'.format([*students.keys()]))
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
@@ -37,13 +37,14 @@ def process():
     recognizedStudentsListBuffer = dict()
     ret, frame = capture.read()
     image = PIL.Image.fromarray(frame)
-    boxes,aligned = core_functions.detectFace(mtcnn,image,'detected_faces/face.jpg')
+    croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
+    boxes,aligned = faceDetector.detectFace(image, croppedImageFilepath)
     if boxes is not None:
         for i in range(0,len(boxes)):
            
-            id, student_name = core_functions.calculateEmbeddingsErrors(resnet,aligned,students)
+            id, student_name = calculateEmbeddingsErrors(resnet,aligned,students)
             
-            core_functions.drawOnFrame(i,frame,boxes,'#{:04d}'.format(id))
+            drawOnFrame(i,frame,boxes,'#{:04d}'.format(id))
             recognizedStudentsListBuffer[id] = student_name
     recognizedStudentsList = recognizedStudentsListBuffer
 	#to break from main loop if user presses ESC
