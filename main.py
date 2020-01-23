@@ -10,42 +10,44 @@ import json
 import core_functions
 from flask import Flask, render_template, Response
 
-recognized_students_list = dict()
-recognized_students_list_buffer = dict()
+recognizedStudentsList = dict()
+recognizedStudentsListBuffer = dict()
+logger = core_functions.createLogger('infinity','log.txt',True)
 
-logger = logging.getLogger('infinity')
-handler = logging.FileHandler('log.txt')
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+
 
 #initialize MTCNN face detector
 mtcnn = core_functions.initializeMTCNN(True,False)
 #Initialize ResNet Inception Model
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(core_functions.device)
 #Load precalculated students embeddings
-all_embeddings = core_functions.loadEmbeddings()
-logger.info('loaded students: {}'.format([*all_embeddings.keys()]))
+students = core_functions.loadStudents()
+logger.info('loaded students: {}'.format([*students.keys()]))
 logger.info('*'*80)
-capture = cv2.VideoCapture(2)
+capture = cv2.VideoCapture(1)
 app = Flask(__name__)
 
+#disable flask logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 def process():   
-    global recognized_students_list_buffer
-    global recognized_students_list
-    recognized_students_list_buffer = dict()
+    global recognizedStudentsListBuffer
+    global recognizedStudentsList
+    recognizedStudentsListBuffer = dict()
     ret, frame = capture.read()
     image = PIL.Image.fromarray(frame)
     boxes,aligned = core_functions.detectFace(mtcnn,image,'detected_faces/face.jpg')
     if boxes is not None:
         for i in range(0,len(boxes)):
            
-            id, student_name = core_functions.calculateEmbeddingsErrors(resnet,aligned,all_embeddings)
+            id, student_name = core_functions.calculateEmbeddingsErrors(resnet,aligned,students)
             
             core_functions.drawOnFrame(i,frame,boxes,'#{:04d}'.format(id))
-            recognized_students_list_buffer[id] = student_name
-    recognized_students_list = recognized_students_list_buffer
+            recognizedStudentsListBuffer[id] = student_name
+    recognizedStudentsList = recognizedStudentsListBuffer
 	#to break from main loop if user presses ESC
-    return frame;
+    return frame
 
 @app.route('/')
 def index():
@@ -71,11 +73,11 @@ def video_viewer():
 
 @app.route('/recognized_students')
 def recognized_students():
-    return Response(json.dumps(recognized_students_list))
+    return Response(json.dumps(recognizedStudentsList))
 
 @app.teardown_appcontext
 def teardown(x):
-    handler.flush()
+    logging.shutdown()
     
 
 
