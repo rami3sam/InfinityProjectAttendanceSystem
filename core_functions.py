@@ -7,7 +7,7 @@ import cv2
 import torch
 from facenet_pytorch import MTCNN
 import logging
-
+import pymongo
 logger = logging.getLogger('infinity')
 #checks if torch library can use gpu if not not it chooses cpu
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -15,7 +15,8 @@ logger.info('Running on device: {}'.format(device))
 
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
-
+dbClient = pymongo.MongoClient("mongodb://localhost:27017/")
+studentsDB = dbClient["mydatabase"]
 
 def loadStudents():
 

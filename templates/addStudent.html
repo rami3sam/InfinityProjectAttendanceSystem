@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add a student</title>
+  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+    <div class='container'>
+        <div class='page-header'>
+          <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
+        </div>
+    </div>
+    
+  <div class='container col-lg-6 jumbotron '>
+  <form id="addStudentForm" method="post" action="/" enctype="multipart/form-data">
+    <h4 >Add a new student:</h4 >
+
+      <div class="form-group">
+    <div class="input-group mb-3 input-group-sm">
+        <div class="input-group-prepend">
+          <span class="input-group-text ">Student ID:</span>
+       </div>
+       <input type="text" name='studentID' class="form-control" required/>
+     </div>
+
+    </div>
+     <div class="form-group">
+     <div class="input-group mb-3 input-group-sm">
+        <div class="input-group-prepend">
+          <span class="input-group-text ">Student Name:</span>
+       </div>
+       <input type="text" name='studentName' class="form-control" required/>
+     </div>
+    </div>
+
+    <div class="form-group">
+      <label for="collegeYear">Select College Year:</label>
+      <select class="form-control" id="collegeYear">
+        <option value='1'>First Year</option>
+        <option value='2'>Second Year</option>
+        <option value='3'>Third Year</option>
+        <option value='4'>Fourth Year</option>
+        <option value='5'>Fifth Year</option>
+      </select>
+    </div>
+
+     <div class="form-group">
+      <form>
+        <div class="custom-file">
+          <input name='images' type="file" class="custom-file-input" required multiple>
+          <label class="custom-file-label" for="images">Select Student Images</label>
+        </div>
+      </form>
+    </div>
+
+
+     <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
+  </form>
+</div>
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/addStudent.js')}}"></script>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
+</body>
+</html>

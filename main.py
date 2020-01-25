@@ -55,13 +55,19 @@ def process():
 def index():
     return render_template('index.html')
 
+@app.route('/addStudent')
+def addstudetn():
+    return render_template('addStudent.html')
+
 def getFrame():
     frame = process()
     ret, jpeg = cv2.imencode('.jpg', frame)
     return jpeg.tobytes()
 
 def video_stream():
-    while True:    
+    #Stopped the opencv part to focus on developing the webserver
+    #Change to True if you want opencv output
+    while True:     
         frame = getFrame()
         if frame != None:
             yield (b'--frame\r\n'

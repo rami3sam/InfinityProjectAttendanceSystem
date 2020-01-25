@@ -4,3 +4,23 @@
 #columnName{
     width:75%;
 }
+
+.page-header {
+    padding-bottom: 9px;
+    margin: 40px 0 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+body{
+    background: repeating-linear-gradient(
+  45deg,
+  #d4d8fc,
+  #d4d8fc 10px,
+  #c8cffa 10px,
+  #c8cffa 20px
+);
+}
+
+td{
+    font-weight: bold;
+}
