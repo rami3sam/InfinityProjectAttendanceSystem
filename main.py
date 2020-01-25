@@ -7,6 +7,7 @@ import PIL
 import time
 import logging
 import json
+from flask_cors import CORS
 from core_functions import *
 
 from classes import *
@@ -26,7 +27,7 @@ logger.info('loaded students: {}'.format([*students.keys()]))
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
 app = Flask(__name__)
-
+CORS(app)
 #disable flask logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)

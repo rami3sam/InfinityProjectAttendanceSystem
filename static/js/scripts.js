@@ -7,28 +7,19 @@ $.ajax({
     cache: false,
     success: function(jsonText){
       
-      var studentTable = $('#studentsTable');
-      studentTable.children().remove();
-      //Create table heading
-      var trhead=$('<tr>');
-      var idHead=$('<th>' ).text("Identifier:");
-      var nameHead=$('<th>').text("Name:");
-      trhead.append(idHead);
-      trhead.append(nameHead);
-      studentTable.append(trhead);
-
+      
+      var tableContents ='<table class="table table-striped">';
+      tableContents+='<tr><th id="columnID">Identifier:</th><th id="columnName">Name:</th></tr>';
       //Create table elements
       var json = JSON.parse(jsonText);
       for(let key in json){
         var id = key.toString().padStart(4,'0');
-        var tr=$('<tr>');
-        var idCell=$('<td>').text(id);
-        var studentNameCell=$('<td>').text(json[key]);
-        tr.append(idCell);
-        tr.append(studentNameCell);
-        studentTable.append(tr);
-       
+        var studentName=json[key];
+        tableContents += '<tr><td>'+id+'</td><td>'+studentName+'</td><tr>';
+        
       }
+      tableContents+='</table>';
+      $('#divStudentsTable').html(tableContents);
     }
 });
 }// end of function

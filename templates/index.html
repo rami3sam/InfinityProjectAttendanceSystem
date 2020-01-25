@@ -15,15 +15,14 @@
         <div class='col-lg-8'>
             <img id="video"  src="{{ url_for('video_viewer') }}">
         </div>
-        <div class='col-lg-4'>
-            <table class='table' id='studentsTable'></table>
+        <div id='divStudentsTable' class='col-lg-4'>
         </div>
   </div>
 
   
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/bootstrap.css')}}"></link>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/bootstrap.min.css')}}"></link>
   <script type="text/javascript" src="{{ url_for('static', filename = 'js/jquery-3.4.1.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'js/bootstrap.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/bootstrap.min.js')}}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename = 'js/scripts.js')}}"></script>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
 </body>
