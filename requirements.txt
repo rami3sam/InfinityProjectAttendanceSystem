@@ -13,3 +13,5 @@ future==0.17.1
 mmcv
 facenet_pytorch
 flask
+flask-cors
+pymongo

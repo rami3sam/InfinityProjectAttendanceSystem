@@ -18,7 +18,7 @@ recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
 logger = createLogger('infinity','log.txt',True)
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -40,6 +40,9 @@ CORS(app)
 #disable flask logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+majors = ['Electronic Engineering' , 'Electrical Engineering','Mecahnical Engineering']
+
 
 def process():   
     global recognizedStudentsListBuffer
@@ -69,35 +72,41 @@ def addStudent():
     now = datetime.datetime.now() 
     if request.method == 'GET':
         
-        return render_template('addStudent.html',now=now)
+        return render_template('addStudent.html',now=now,majors=majors)
     elif request.method == 'POST':
         studentName = request.form.get('studentName')
         studentID = request.form.get('studentID')
         collegeYear = request.form.get('collegeYear')
+        admissionYear = request.form.get('admissionYear')
+        studentMajor = request.form.get('studentMajor')
         studentDict = dict(studentName=studentName,studentID=studentID,
-        collegeYear=collegeYear)
-        studentsDB['students'].insert_one(studentDict)
+        collegeYear=collegeYear,admissionYear=admissionYear,studentMajor=studentMajor)
+      
+        
+        if studentsDB['students'].count_documents({'studentID':studentID},limit=1) > 0:
+            flash('Student ID must be unique','error')
+            return redirect(request.url)
+
 
         if 'images[]' not in request.files:
-            flash('You must select at least one image')
+            flash('You must select at least one image','error')
             return redirect(request.url)
 		
         images = request.files['images[]']
         if images.filename == '':
-            flash('No images selected for uploading')
+            flash('No images selected for uploading','error')
             return redirect(request.url)
         if images and allowed_file(images.filename):
             studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
             os.makedirs(studentDir,exist_ok=True)
             for i,image in enumerate(request.files.getlist("images[]")):
                 imageFilename = '{:04d}'.format(i)
-                
+                studentsDB['students'].insert_one(studentDict)
                 image.save(os.path.join(studentDir, imageFilename))
-
-                flash('Images successfully uploaded')
-                return redirect('/')
+                flash('Student added successfully','success')
+                return redirect('/addStudent')
         else:
-            flash('Allowed file types are png, jpg, jpeg, gif')
+            flash('Allowed file types are png, jpg, jpeg')
             return redirect(request.url)
 
 

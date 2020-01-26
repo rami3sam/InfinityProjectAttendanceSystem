@@ -24,3 +24,10 @@ body{
 td{
     font-weight: bold;
 }
+.error{
+  color:red;
+}
+
+.success{
+  color:green;
+}

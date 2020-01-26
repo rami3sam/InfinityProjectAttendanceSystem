@@ -22,7 +22,7 @@
       <label for="collegeYear">Select Admission Year:</label>
       <select class="form-control" name="admissionYear">
       {% for year in range(now.year , now.year-10,-1)%}
-        <option value='1'>{{year}}</option>
+        <option value='{{year}}'>{{year}}</option>
       {% endfor %}    
       </select>
 
@@ -45,13 +45,22 @@
     <div class="form-group">
       <label for="collegeYear">Select College Year:</label>
       <select class="form-control" name="collegeYear">
-        <option value='1'>First Year</option>
-        <option value='2'>Second Year</option>
-        <option value='3'>Third Year</option>
-        <option value='4'>Fourth Year</option>
-        <option value='5'>Fifth Year</option>
+        {% for year in ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year'] %}
+        <option value='{{year}}'>{{year}}</option>
+        {% endfor %}
       </select>
     </div>
+
+    <div class="form-group">
+      <label for="studentMajor">Select College Year:</label>
+      <select class="form-control" name="studentMajor">
+        {% for major in majors%}
+        <option value='{{major}}'>{{major}}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+
 
      <div class="form-group">
         <div class="custom-file">
