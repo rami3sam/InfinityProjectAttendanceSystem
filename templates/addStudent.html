@@ -12,16 +12,24 @@
         </div>
     </div>
     
-  <div class='container col-lg-6 jumbotron '>
-  <form id="addStudentForm" method="post" action="/" enctype="multipart/form-data">
-    <h4 >Add a new student:</h4 >
+  <div class='container col-lg-8 jumbotron '>
+  <form id="addStudentForm"  method="POST" enctype="multipart/form-data" >
+    <h4>Add a new student:</h4>
 
       <div class="form-group">
-    <div class="input-group mb-3 input-group-sm">
+      <div class="input-group mb-3 input-group-sm">
+
+      <label for="collegeYear">Select Admission Year:</label>
+      <select class="form-control" name="admissionYear">
+      {% for year in range(now.year , now.year-10,-1)%}
+        <option value='1'>{{year}}</option>
+      {% endfor %}    
+      </select>
+
         <div class="input-group-prepend">
           <span class="input-group-text ">Student ID:</span>
        </div>
-       <input type="text" name='studentID' class="form-control" required/>
+       <input type="text" pattern="\d*" maxlength="5" name='studentID' class="form-control" required/>
      </div>
 
     </div>
@@ -36,7 +44,7 @@
 
     <div class="form-group">
       <label for="collegeYear">Select College Year:</label>
-      <select class="form-control" id="collegeYear">
+      <select class="form-control" name="collegeYear">
         <option value='1'>First Year</option>
         <option value='2'>Second Year</option>
         <option value='3'>Third Year</option>
@@ -46,18 +54,29 @@
     </div>
 
      <div class="form-group">
-      <form>
         <div class="custom-file">
-          <input name='images' type="file" class="custom-file-input" required multiple>
+          <input name='images[]' type="file" class="custom-file-input"  multiple required>
           <label class="custom-file-label" for="images">Select Student Images</label>
         </div>
-      </form>
     </div>
 
 
      <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
-  </form>
+
+     {% with messages = get_flashed_messages(with_categories=true) %}
+     {% if messages %}
+       <ul class=flashes>
+       {% for category, message in messages %}
+         <li class="{{ category }}">{{ message }}</li>
+       {% endfor %}
+       </ul>
+     {% endif %}
+   {% endwith %}
+
+    </form>
 </div>
+
+
 
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
   <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>

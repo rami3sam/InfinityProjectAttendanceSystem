@@ -16,7 +16,7 @@ logger.info('Running on device: {}'.format(device))
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 dbClient = pymongo.MongoClient("mongodb://localhost:27017/")
-studentsDB = dbClient["mydatabase"]
+studentsDB = dbClient["infinity"]
 
 def loadStudents():
 

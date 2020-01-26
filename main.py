@@ -7,15 +7,22 @@ import PIL
 import time
 import logging
 import json
+import datetime
 from flask_cors import CORS
 from core_functions import *
-
+from pymongo import *
 from classes import *
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response,request,flash,redirect
 
 recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
 logger = createLogger('infinity','log.txt',True)
+
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 #initialize MTCNN face detector
 faceDetector = MTCNNFaceDetector(device,True,False)
@@ -27,6 +34,8 @@ logger.info('loaded students: {}'.format([*students.keys()]))
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
 app = Flask(__name__)
+app.secret_key = "super secret key"
+
 CORS(app)
 #disable flask logging
 log = logging.getLogger('werkzeug')
@@ -55,9 +64,45 @@ def process():
 def index():
     return render_template('index.html')
 
-@app.route('/addStudent')
-def addstudetn():
-    return render_template('addStudent.html')
+@app.route('/addStudent',methods=['GET','POST'])
+def addStudent():
+    now = datetime.datetime.now() 
+    if request.method == 'GET':
+        
+        return render_template('addStudent.html',now=now)
+    elif request.method == 'POST':
+        studentName = request.form.get('studentName')
+        studentID = request.form.get('studentID')
+        collegeYear = request.form.get('collegeYear')
+        studentDict = dict(studentName=studentName,studentID=studentID,
+        collegeYear=collegeYear)
+        studentsDB['students'].insert_one(studentDict)
+
+        if 'images[]' not in request.files:
+            flash('You must select at least one image')
+            return redirect(request.url)
+		
+        images = request.files['images[]']
+        if images.filename == '':
+            flash('No images selected for uploading')
+            return redirect(request.url)
+        if images and allowed_file(images.filename):
+            studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
+            os.makedirs(studentDir,exist_ok=True)
+            for i,image in enumerate(request.files.getlist("images[]")):
+                imageFilename = '{:04d}'.format(i)
+                
+                image.save(os.path.join(studentDir, imageFilename))
+
+                flash('Images successfully uploaded')
+                return redirect('/')
+        else:
+            flash('Allowed file types are png, jpg, jpeg, gif')
+            return redirect(request.url)
+
+
+
+        return str(studentDict)
 
 def getFrame():
     frame = process()
