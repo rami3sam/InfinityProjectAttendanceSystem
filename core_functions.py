@@ -8,6 +8,7 @@ import torch
 from facenet_pytorch import MTCNN
 import logging
 import pymongo
+from classes import *
 logger = logging.getLogger('infinity')
 #checks if torch library can use gpu if not not it chooses cpu
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -27,9 +28,15 @@ def loadStudents():
         if re.match(regexp,dirpath):
             studentFilePath = os.path.join(dirpath ,'student.dat')
             if os.path.exists(studentFilePath):
-                with open(studentFilePath,'rb') as studentFile:       
-                    student = pickle.load(studentFile)
-                    students[student.name] = student
+                with open(studentFilePath,'rb') as studentFile:   
+                     
+                    studentFromFile = pickle.load(studentFile)
+                    students[studentFromFile.ID] = studentFromFile
+                    query = {'ID':studentFromFile.ID}
+                    if  studentsDB['students'].count_documents(query) > 0:
+                        studentFromDB= studentsDB['students'].find_one(query) 
+                        students[studentFromFile.ID] = Student(studentFromFile,studentFromDB)
+
     return students
 
 def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):

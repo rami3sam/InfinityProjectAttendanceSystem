@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add a student</title>
+  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+    <div class='container'>
+        <div class='page-header'>
+          <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
+        </div>
+    </div>
+    
+  <div class='container col-lg-8 jumbotron '>
+
+    <table class='table table-striped'>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Major</th>
+            <th>Admission Year</th>
+            <th></th>
+            <th></th>
+        </tr>
+        <tr>
+        {% for student in students %}
+        <td>{{student.ID}}</td>
+        <td>{{student.name}}</td>
+        <td>{{student.major}}</td>
+        <td>{{student.admissionYear}}</td>   
+        <th><a href="http://google.com"><button class='btn btn-primary'>Edit</button></a></th>
+        <th><a href="deleteStudent"><button class='btn btn-danger'>Delete</button></a></th>
+        {% endfor %}
+         </tr>
+
+    </table>
+
+     {% with messages = get_flashed_messages(with_categories=true) %}
+     {% if messages %}
+       <ul class=flashes>
+       {% for category, message in messages %}
+         <li class="{{ category }}">{{ message }}</li>
+       {% endfor %}
+       </ul>
+     {% endif %}
+   {% endwith %}
+
+</div>
+
+
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/addStudent.js')}}"></script>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
+</body>
+</html>

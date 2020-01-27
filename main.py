@@ -18,7 +18,7 @@ recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
 logger = createLogger('infinity','log.txt',True)
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -30,7 +30,7 @@ faceDetector = MTCNNFaceDetector(device,True,False)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 #Load precalculated students embeddings
 students = loadStudents()
-logger.info('loaded students: {}'.format([*students.keys()]))
+logger.info('loaded students: {}'.format([*students]))
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
 app = Flask(__name__)
@@ -79,8 +79,8 @@ def addStudent():
         collegeYear = request.form.get('collegeYear')
         admissionYear = request.form.get('admissionYear')
         studentMajor = request.form.get('studentMajor')
-        studentDict = dict(studentName=studentName,studentID=studentID,
-        collegeYear=collegeYear,admissionYear=admissionYear,studentMajor=studentMajor)
+        studentDict = dict(name=studentName,ID=studentID,
+        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
       
         
         if studentsDB['students'].count_documents({'studentID':studentID},limit=1) > 0:
@@ -106,12 +106,9 @@ def addStudent():
                 flash('Student added successfully','success')
                 return redirect('/addStudent')
         else:
-            flash('Allowed file types are png, jpg, jpeg')
+            flash('Allowed file types are jpg, jpeg')
             return redirect(request.url)
 
-
-
-        return str(studentDict)
 
 def getFrame():
     frame = process()
@@ -127,7 +124,6 @@ def video_stream():
             yield (b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
-
 @app.route('/video_viewer')
 def video_viewer():
     return Response(video_stream(),
@@ -141,7 +137,10 @@ def recognized_students():
 def teardown(x):
     logging.shutdown()
     
-
+@app.route('/studentsList')
+def studentsList():
+    students = studentsDB['students'].find().skip(0).limit(10)
+    return render_template('studentsList.html',students=students)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)

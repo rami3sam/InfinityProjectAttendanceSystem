@@ -1,9 +1,20 @@
 from facenet_pytorch import MTCNN
 import logging
 logger = logging.getLogger('infinity')
+
 class Student:
-    def __init__(self,name):
-        self.name = name   
+    def __init__(self,studentFile,studentInfo):
+        self.ID = studentFile.ID
+        self.embeddingsList = studentFile.embeddingsList
+        self.processedPhotos = studentFile.processedPhotos
+        self.name = studentInfo['name']
+        self.admissionYear = studentInfo['admissionYear']
+        self.collegeYear = studentInfo['collegeYear']
+        self.major = studentInfo['major']
+
+class StudentFile:
+    def __init__(self,ID):
+        self.ID = ID   
         self.embeddingsList = []
         self.processedPhotos = []
 

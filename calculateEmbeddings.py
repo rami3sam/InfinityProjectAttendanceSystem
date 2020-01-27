@@ -31,13 +31,13 @@ for (dirpath, dirnames, filenames) in os.walk("students_photos"):
             #checking if the file is .jpg to exclude embeddings
             if re.match(r'.+\.jpg$' , filename):            
                 imagePath = os.path.join(dirpath ,filename)           
-                studentName = dirpath.split('/')[1]
+                studentID = dirpath.split('/')[1]
 
                 #checking if the students exists or we create a new student object           
-                if students.get(studentName,None) is None:
-                    students[studentName] = Student(studentName)
+                if students.get(studentID,None) is None:
+                    students[studentID] = StudentFile(studentID)
                 #if embeddings are calculated there is no need to calculate it again
-                if not (imagePath in students[studentName].processedPhotos):
+                if not (imagePath in students[studentID].processedPhotos):
                     os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True)
                     logger.info('Detecting faces in  : {}'.format(imagePath))
                     image = PIL.Image.open(imagePath)
@@ -48,14 +48,14 @@ for (dirpath, dirnames, filenames) in os.walk("students_photos"):
 
                     embeddings = resnet(aligned.unsqueeze(0))
                     embeddings = Embeddings(filename,embeddings)
-                    students[studentName].embeddingsList.append(embeddings)
-                    students[studentName].processedPhotos.append(imagePath)
+                    students[studentID].embeddingsList.append(embeddings)
+                    students[studentID].processedPhotos.append(imagePath)
                     logger.info('Successfully done : {}\n'.format(imagePath))
 
 #Write student objects to files                
-for studentName in students.keys():
-    studentFilePath = os.path.join(STUDENTS_PHOTOS_DIR,studentName,"student.dat")
+for studentID in students.keys():
+    studentFilePath = os.path.join(STUDENTS_PHOTOS_DIR,studentID,"student.dat")
     with open(studentFilePath, 'wb') as studentFile:
-        pickle.dump(students[studentName],studentFile)
+        pickle.dump(students[studentID],studentFile)
         logger.info('Done saving file: {}'.format(studentFilePath))
             
