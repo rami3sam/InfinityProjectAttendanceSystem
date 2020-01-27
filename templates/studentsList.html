@@ -23,18 +23,41 @@
             <th></th>
             <th></th>
         </tr>
-        <tr>
         {% for student in students %}
+        <tr>
         <td>{{student.ID}}</td>
         <td>{{student.name}}</td>
         <td>{{student.major}}</td>
         <td>{{student.admissionYear}}</td>   
         <th><a href="http://google.com"><button class='btn btn-primary'>Edit</button></a></th>
-        <th><a href="deleteStudent"><button class='btn btn-danger'>Delete</button></a></th>
-        {% endfor %}
-         </tr>
-
+        <th><button onclick='changeDeleteModal("{{student.ID}}","{{student.name}}")'
+           class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 
+        </tr>
+         {% endfor %}
     </table>
+
+    <div id="myModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+    
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            
+            <h4 class="modal-title">Delete Confirmation</h4>
+          </div>
+          <div class="modal-body">
+            <p id='deleteModalText'></p>
+          </div>
+          <div class="modal-footer">
+
+            <a id='deleteLink'><button class='btn btn-danger'>Delete</button></a>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+    
+      </div>
+    </div>
+
 
      {% with messages = get_flashed_messages(with_categories=true) %}
      {% if messages %}
@@ -53,7 +76,7 @@
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
   <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'js/addStudent.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/studentsList.js')}}"></script>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
 </body>
 </html>

@@ -16,8 +16,9 @@ logger.info('Running on device: {}'.format(device))
 
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
-dbClient = pymongo.MongoClient("mongodb://localhost:27017/")
-studentsDB = dbClient["infinity"]
+STUDENTS_COL = 'students'
+mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
+appDatabase = mongoClient["infinity"]
 
 def loadStudents():
 
@@ -33,8 +34,8 @@ def loadStudents():
                     studentFromFile = pickle.load(studentFile)
                     students[studentFromFile.ID] = studentFromFile
                     query = {'ID':studentFromFile.ID}
-                    if  studentsDB['students'].count_documents(query) > 0:
-                        studentFromDB= studentsDB['students'].find_one(query) 
+                    if  appDatabase[STUDENTS_COL].count_documents(query) > 0:
+                        studentFromDB= appDatabase[STUDENTS_COL].find_one(query) 
                         students[studentFromFile.ID] = Student(studentFromFile,studentFromDB)
 
     return students

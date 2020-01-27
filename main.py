@@ -12,6 +12,7 @@ from flask_cors import CORS
 from core_functions import *
 from pymongo import *
 from classes import *
+from shutil import rmtree
 from flask import Flask, render_template, Response,request,flash,redirect
 
 recognizedStudentsList = dict()
@@ -83,7 +84,7 @@ def addStudent():
         collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
       
         
-        if studentsDB['students'].count_documents({'studentID':studentID},limit=1) > 0:
+        if appDatabase[STUDENTS_COL].count_documents({'studentID':studentID},limit=1) > 0:
             flash('Student ID must be unique','error')
             return redirect(request.url)
 
@@ -101,7 +102,7 @@ def addStudent():
             os.makedirs(studentDir,exist_ok=True)
             for i,image in enumerate(request.files.getlist("images[]")):
                 imageFilename = '{:04d}'.format(i)
-                studentsDB['students'].insert_one(studentDict)
+                appDatabase[STUDENTS_COL].insert_one(studentDict)
                 image.save(os.path.join(studentDir, imageFilename))
                 flash('Student added successfully','success')
                 return redirect('/addStudent')
@@ -139,8 +140,16 @@ def teardown(x):
     
 @app.route('/studentsList')
 def studentsList():
-    students = studentsDB['students'].find().skip(0).limit(10)
+    students = appDatabase[STUDENTS_COL].find().skip(0).limit(10)
     return render_template('studentsList.html',students=students)
+
+@app.route('/deleteStudent/<id>')
+def deleteStudent(id):
+    if appDatabase[STUDENTS_COL].count_documents({'ID':id}) > 0:
+        appDatabase[STUDENTS_COL].remove({"ID":id})
+        rmtree(os.path.join(STUDENTS_PHOTOS_DIR ,id),ignore_errors=True)
+        return redirect('/studentsList')
+    return(Respone('Invalid delete operation'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
