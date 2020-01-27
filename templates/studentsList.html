@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Add a student</title>
+  <title>Students List</title>
   <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
 </head>
@@ -29,7 +29,7 @@
         <td>{{student.name}}</td>
         <td>{{student.major}}</td>
         <td>{{student.admissionYear}}</td>   
-        <th><a href="http://google.com"><button class='btn btn-primary'>Edit</button></a></th>
+        <th><a href="/editStudent/{{student.ID}}"><button class='btn btn-primary'>Edit</button></a></th>
         <th><button onclick='changeDeleteModal("{{student.ID}}","{{student.name}}")'
            class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 
         </tr>

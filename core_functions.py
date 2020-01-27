@@ -5,7 +5,7 @@ import re
 import numpy as np
 import cv2
 import torch
-from facenet_pytorch import MTCNN
+from facenet_pytorch import MTCNN,InceptionResnetV1
 import logging
 import pymongo
 from classes import *
@@ -19,6 +19,11 @@ DETECTED_FACES_DIR = 'detected_faces'
 STUDENTS_COL = 'students'
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 appDatabase = mongoClient["infinity"]
+
+#initialize MTCNN face detector
+faceDetector = MTCNNFaceDetector(device,True,True)
+#Initialize ResNet Inception Model
+resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
 def loadStudents():
 
@@ -37,7 +42,8 @@ def loadStudents():
                     if  appDatabase[STUDENTS_COL].count_documents(query) > 0:
                         studentFromDB= appDatabase[STUDENTS_COL].find_one(query) 
                         students[studentFromFile.ID] = Student(studentFromFile,studentFromDB)
-
+    logger.info('loaded students: {}'.format([students[i].name for i in students]))
+    
     return students
 
 def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
@@ -76,13 +82,16 @@ def calculateEmbeddingsErrors(resnet,alignedFaces,students):
         minimumDistance = min(distancesArray)  
         minimumDistanceDict[minimumDistance] = studentName
         logger.info('{} minimum  distance is : {}'.format(studentName , minimumDistance))
+    
+    if len(minimumDistanceDict) == 0:
+        return 0,'No students in the database'
     minimumDistance = min(minimumDistanceDict.keys())
-    closestStudentName = minimumDistanceDict.get(minimumDistance)
-    closestStudentId = 0 #0 is placeholder
+    closestStudentId = minimumDistanceDict.get(minimumDistance)
+    closestStudentName = students[closestStudentId].name
     logger.info(' student is likely to be: {} '.format(closestStudentName).center(80,'*'))
     logger.info(' least distance is: {} '.format(minimumDistance).center(80,'*'))
 
-    return closestStudentId,closestStudentName
+    return int(closestStudentId),closestStudentName
 
        
 
@@ -95,3 +104,5 @@ def createLogger(loggerName,logFilename,logToConsole):
         logger.addHandler(consoleHandler)
     logger.setLevel(logging.INFO)
     return logger
+
+   

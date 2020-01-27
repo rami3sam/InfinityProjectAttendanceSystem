@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from facenet_pytorch import InceptionResnetV1
 import os
 import torch
 import PIL
@@ -14,7 +13,7 @@ from pymongo import *
 from classes import *
 from shutil import rmtree
 from flask import Flask, render_template, Response,request,flash,redirect
-
+from calculateEmbeddings import *
 recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
 logger = createLogger('infinity','log.txt',True)
@@ -25,13 +24,10 @@ def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-#initialize MTCNN face detector
-faceDetector = MTCNNFaceDetector(device,True,False)
-#Initialize ResNet Inception Model
-resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
 #Load precalculated students embeddings
-students = loadStudents()
-logger.info('loaded students: {}'.format([*students]))
+students = reloadStudentData()
+
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
 app = Flask(__name__)
@@ -43,7 +39,7 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 majors = ['Electronic Engineering' , 'Electrical Engineering','Mecahnical Engineering']
-
+years = ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
 
 def process():   
     global recognizedStudentsListBuffer
@@ -64,17 +60,18 @@ def process():
 	#to break from main loop if user presses ESC
     return frame
 
-@app.route('/')
+@app.route('/classMonitor')
 def index():
-    return render_template('index.html')
+    return render_template('classMonitor.html')
 
 @app.route('/addStudent',methods=['GET','POST'])
 def addStudent():
+    global students
     now = datetime.datetime.now() 
     if request.method == 'GET':
         
-        return render_template('addStudent.html',now=now,majors=majors)
-    elif request.method == 'POST':
+        return render_template('addStudent.html',now=now,majors=majors,years=years)
+    if request.method == 'POST':
         studentName = request.form.get('studentName')
         studentID = request.form.get('studentID')
         collegeYear = request.form.get('collegeYear')
@@ -84,7 +81,7 @@ def addStudent():
         collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
       
         
-        if appDatabase[STUDENTS_COL].count_documents({'studentID':studentID},limit=1) > 0:
+        if appDatabase[STUDENTS_COL].count_documents({'ID':studentID},limit=1) > 0:
             flash('Student ID must be unique','error')
             return redirect(request.url)
 
@@ -102,14 +99,58 @@ def addStudent():
             os.makedirs(studentDir,exist_ok=True)
             for i,image in enumerate(request.files.getlist("images[]")):
                 imageFilename = '{:04d}'.format(i)
-                appDatabase[STUDENTS_COL].insert_one(studentDict)
-                image.save(os.path.join(studentDir, imageFilename))
-                flash('Student added successfully','success')
-                return redirect('/addStudent')
+                imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
+                image.save(imagePath)
+                
         else:
             flash('Allowed file types are jpg, jpeg')
             return redirect(request.url)
+        appDatabase[STUDENTS_COL].insert_one(studentDict)
+        students = reloadStudentData()
+        flash('Student added successfully','success')
+        return redirect('/addStudent')
 
+@app.route('/editStudent/<id>',methods=['GET','POST'])
+def editStudent(id):
+    global students
+    badEditOperation = Response('Invaid edit operation')
+    now = datetime.datetime.now() 
+    
+    if request.method == 'GET':
+            if appDatabase[STUDENTS_COL].count_documents({'ID':id}) > 0:
+                student = students[id]
+                return render_template('editStudent.html',now=now,majors=majors,
+                years=years,student=student)
+            else:
+                return badEditOperation
+   
+    if request.method == 'POST':
+        
+        studentName = request.form.get('studentName')
+        studentID = id
+        collegeYear = request.form.get('collegeYear')
+        admissionYear = request.form.get('admissionYear')
+        studentMajor = request.form.get('studentMajor')
+        studentDict = dict(name=studentName,ID=studentID,
+        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
+
+        if appDatabase[STUDENTS_COL].count_documents({'ID':studentID}) > 0:
+            appDatabase[STUDENTS_COL].delete_many({'ID':studentID})
+            appDatabase[STUDENTS_COL].insert_one(studentDict)
+        
+        images = request.files['images[]']
+        if images and not images.filename == '':
+            studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
+            os.makedirs(studentDir,exist_ok=True)
+            for i,image in enumerate(request.files.getlist("images[]")):
+                if allowed_file(image.filename):
+                    imageFilename = '{:04d}'.format(i)
+                    imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
+                    image.save(imagePath)
+
+        students = reloadStudentData()
+        flash('Student editted successfully','success')
+        return redirect(request.url)
 
 def getFrame():
     frame = process()
@@ -146,10 +187,11 @@ def studentsList():
 @app.route('/deleteStudent/<id>')
 def deleteStudent(id):
     if appDatabase[STUDENTS_COL].count_documents({'ID':id}) > 0:
-        appDatabase[STUDENTS_COL].remove({"ID":id})
+        appDatabase[STUDENTS_COL].delete_many({"ID":id})
         rmtree(os.path.join(STUDENTS_PHOTOS_DIR ,id),ignore_errors=True)
+        students = reloadStudentData()
         return redirect('/studentsList')
-    return(Respone('Invalid delete operation'))
+    return(Response('Invalid delete operation'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
