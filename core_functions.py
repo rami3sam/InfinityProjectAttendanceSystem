@@ -26,25 +26,12 @@ faceDetector = MTCNNFaceDetector(device,True,True)
 resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
 
 def loadStudents():
-
-    students = dict()
-    regexp = ''.join([r'^',STUDENTS_PHOTOS_DIR,r'/\w*$'])
-
-    for (dirpath, _, _) in os.walk("students_photos"):
-        if re.match(regexp,dirpath):
-            studentFilePath = os.path.join(dirpath ,'student.dat')
-            if os.path.exists(studentFilePath):
-                with open(studentFilePath,'rb') as studentFile:   
-                     
-                    studentFromFile = pickle.load(studentFile)
-                    students[studentFromFile.ID] = studentFromFile
-                    query = {'ID':studentFromFile.ID}
-                    if  appDatabase[STUDENTS_COL].count_documents(query) > 0:
-                        studentFromDB= appDatabase[STUDENTS_COL].find_one(query) 
-                        students[studentFromFile.ID] = Student(studentFromFile,studentFromDB)
-    logger.info('loaded students: {}'.format([students[i].name for i in students]))
-    
-    return students
+    studentsBuffer = dict()
+    students = appDatabase[STUDENTS_COL].find()
+    for student in students:
+        studentsBuffer[student['ID']] = Student(student)
+        #print( studentsBuffer[student['ID']].ID)
+    return studentsBuffer
 
 def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
     boundingBoxes = np.array(boundingBoxes,dtype='int')
@@ -73,15 +60,15 @@ def calculateEmbeddingsErrors(resnet,alignedFaces,students):
     calculatedEmbeddings = resnet(alignedFaces).detach().cpu()
 
     minimumDistanceDict = dict()
-    for studentName in students:
+    for studentID in students:
         distancesArray = []
-        for embeddings in students[studentName].embeddingsList:
+        for embeddings in students[studentID].embeddingsList:
             distance = (calculatedEmbeddings - embeddings.embeddings).norm().item()
             distancesArray.append (distance)
-        logger.info('{} distances are: {}'.format(studentName ,distancesArray))
+        logger.info('{} distances are: {}'.format(studentID ,distancesArray))
         minimumDistance = min(distancesArray)  
-        minimumDistanceDict[minimumDistance] = studentName
-        logger.info('{} minimum  distance is : {}'.format(studentName , minimumDistance))
+        minimumDistanceDict[minimumDistance] = studentID
+        logger.info('{} minimum  distance is : {}'.format(studentID , minimumDistance))
     
     if len(minimumDistanceDict) == 0:
         return 0,'No students in the database'

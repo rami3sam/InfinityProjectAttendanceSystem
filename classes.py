@@ -1,22 +1,21 @@
 from facenet_pytorch import MTCNN
+import pickle
 import logging
 logger = logging.getLogger('infinity')
 
 class Student:
-    def __init__(self,studentFile,studentInfo):
-        self.ID = studentFile.ID
-        self.embeddingsList = studentFile.embeddingsList
-        self.processedPhotos = studentFile.processedPhotos
-        self.name = studentInfo['name']
-        self.admissionYear = studentInfo['admissionYear']
-        self.collegeYear = studentInfo['collegeYear']
-        self.major = studentInfo['major']
+    def __init__(self,student):
+        self.ID = student['ID']
+        self.processedPhotos = student['processedPhotos']
+        self.name = student['name']
+        self.admissionYear = student['admissionYear']
+        self.collegeYear = student['collegeYear']
+        self.major = student['major']
 
-class StudentFile:
-    def __init__(self,ID):
-        self.ID = ID   
-        self.embeddingsList = []
-        self.processedPhotos = []
+        embeddingsListBuffer=[]
+        for embeddings in student['embeddingsList']:
+            embeddingsListBuffer.append(pickle.loads(embeddings))
+        self.embeddingsList = embeddingsListBuffer
 
 class Embeddings:
     def __init__(self,filename='',embeddings=None):

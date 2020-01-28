@@ -18,15 +18,12 @@ recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
 logger = createLogger('infinity','log.txt',True)
 
+students = loadStudents()
+
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-
-#Load precalculated students embeddings
-students = reloadStudentData()
 
 logger.info('*'*80)
 capture = cv2.VideoCapture(1)
@@ -82,7 +79,8 @@ def addStudent():
         admissionYear = request.form.get('admissionYear')
         studentMajor = request.form.get('studentMajor')
         studentDict = dict(name=studentName,ID=studentID,
-        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
+        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor,
+        embeddingsList=[],processedPhotos=[])
       
         
         if appDatabase[STUDENTS_COL].count_documents({'ID':studentID},limit=1) > 0:
@@ -110,19 +108,20 @@ def addStudent():
             flash('Allowed file types are jpg, jpeg')
             return redirect(request.url)
         appDatabase[STUDENTS_COL].insert_one(studentDict)
-        students = reloadStudentData()
+        calculateStudentEmbeddings(studentID)
+        students = loadStudents()
         flash('Student added successfully','success')
         return redirect('/addStudent')
 
-@app.route('/editStudent/<id>',methods=['GET','POST'])
-def editStudent(id):
+@app.route('/editStudent/<studentID>',methods=['GET','POST'])
+def editStudent(studentID):
     global students
     badEditOperation = Response('Invaid edit operation')
     now = datetime.datetime.now() 
     
     if request.method == 'GET':
-            if appDatabase[STUDENTS_COL].count_documents({'ID':id}) > 0:
-                student = students[id]
+            if appDatabase[STUDENTS_COL].count_documents({'ID':studentID}) > 0:
+                student = students[studentID]
                 return render_template('editStudent.html',now=now,majors=majors,
                 years=years,student=student)
             else:
@@ -131,12 +130,12 @@ def editStudent(id):
     if request.method == 'POST':
         
         studentName = request.form.get('studentName')
-        studentID = id
         collegeYear = request.form.get('collegeYear')
         admissionYear = request.form.get('admissionYear')
         studentMajor = request.form.get('studentMajor')
         studentDict = dict(name=studentName,ID=studentID,
-        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor)
+        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor,
+        embeddingsList=[],processedPhotos=[])
 
         if appDatabase[STUDENTS_COL].count_documents({'ID':studentID}) > 0:
             appDatabase[STUDENTS_COL].delete_many({'ID':studentID})
@@ -145,15 +144,24 @@ def editStudent(id):
         images = request.files['images[]']
         if images and not images.filename == '':
             studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
+            lastIndex = 0
             os.makedirs(studentDir,exist_ok=True)
-            for i,image in enumerate(request.files.getlist("images[]")):
+            for i in range(0,9999):
+                filename = '{:04d}.jpg'.format(i)
+                if os.path.exists(os.path.join(studentDir,filename)):
+                    continue
+                lastIndex = i
+                break
+
+            for image in request.files.getlist("images[]"):
                 if allowed_file(image.filename):
-                    imageFilename = '{:04d}'.format(i)
+                    imageFilename = '{:04d}'.format(lastIndex)
                     imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
                     image.save(imagePath)
-
-        students = reloadStudentData()
+                    lastIndex+=1
         flash('Student editted successfully','success')
+        calculateStudentEmbeddings(studentID)
+        students = loadStudents()
         return redirect(request.url)
 
 def getFrame():
@@ -193,7 +201,6 @@ def deleteStudent(id):
     if appDatabase[STUDENTS_COL].count_documents({'ID':id}) > 0:
         appDatabase[STUDENTS_COL].delete_many({"ID":id})
         rmtree(os.path.join(STUDENTS_PHOTOS_DIR ,id),ignore_errors=True)
-        students = reloadStudentData()
         return redirect('/studentsList')
     return(Response('Invalid delete operation'))
 
