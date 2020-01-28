@@ -12,14 +12,14 @@
         </div>
     </div>
     
-  <div class='container col-lg-8 jumbotron '>
+  <div class='container col-lg-8  col-sm-12 jumbotron '>
 
     <table class='table table-striped'>
         <tr>
             <th>ID</th>
             <th>Name</th>
-            <th>Major</th>
-            <th>Admission Year</th>
+            <th class='d-sm-none d-lg-inline d-none'>Major</th>
+            <th class='d-sm-none d-lg-inline d-none'>Admission Year</th>
             <th></th>
             <th></th>
         </tr>
@@ -27,8 +27,8 @@
         <tr>
         <td>{{student.ID}}</td>
         <td>{{student.name}}</td>
-        <td>{{student.major}}</td>
-        <td>{{student.admissionYear}}</td>   
+        <td class='d-sm-none d-lg-inline d-none'>{{student.major}}</td>
+        <td class='d-sm-none d-lg-inline d-none'>{{student.admissionYear}}</td>   
         <th><a href="/editStudent/{{student.ID}}"><button class='btn btn-primary'>Edit</button></a></th>
         <th><button onclick='changeDeleteModal("{{student.ID}}","{{student.name}}")'
            class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 

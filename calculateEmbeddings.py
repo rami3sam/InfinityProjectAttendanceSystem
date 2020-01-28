@@ -29,8 +29,7 @@ def calculateStudentEmbeddings(studentID):
             #checking if the file is .jpg to exclude embeddings
             if re.match(r'.+\.jpg$' , filename):                    
                 #if embeddings are calculated there is no need to calculate it again
-                
-                
+            
                 if  filename not in processedPhotos:
                     imagePath = os.path.join(studentDirPath,  filename)
                     os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True)

@@ -26,7 +26,7 @@ def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 logger.info('*'*80)
-capture = cv2.VideoCapture(1)
+capture = cv2.VideoCapture(0)
 app = Flask(__name__)
 app.secret_key = "super secret key"
 
@@ -49,10 +49,10 @@ def process():
     if boxes is not None:
         for i in range(0,len(boxes)):
            
-            id, student_name = calculateEmbeddingsErrors(resnet,aligned,students)
+            studentID, studentName = calculateEmbeddingsErrors(resnet,aligned[i],students)
             
-            drawOnFrame(i,frame,boxes,'#{:04d}'.format(id))
-            recognizedStudentsListBuffer[id] = student_name
+            drawOnFrame(i,frame,boxes,'#{:04d}'.format(studentID))
+            recognizedStudentsListBuffer[studentID] = studentName
     recognizedStudentsList = recognizedStudentsListBuffer
 	#to break from main loop if user presses ESC
     return frame
@@ -203,6 +203,14 @@ def deleteStudent(id):
         rmtree(os.path.join(STUDENTS_PHOTOS_DIR ,id),ignore_errors=True)
         return redirect('/studentsList')
     return(Response('Invalid delete operation'))
+
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)

@@ -19,7 +19,7 @@
       <div class="form-group">
       <div class="input-group mb-3 input-group-sm">
 
-      <label for="collegeYear">Select Admission Year:</label>
+      <label for="collegeYear"><span class='d-lg-inline d-none'>Select</span> Admission Year:</label>
       <select class="form-control" name="admissionYear">
       {% for year in range(now.year , now.year-10,-1)%}
         <option value='{{year}}'>{{year}}</option>
@@ -27,7 +27,7 @@
       </select>
 
         <div class="input-group-prepend">
-          <span class="input-group-text ">Student ID:</span>
+          <span class="input-group-text "><span class='d-lg-inline d-none'>Student</span> ID:</span>
        </div>
        <input type="text" pattern="\d*" maxlength="5" name='studentID' class="form-control" required/>
      </div>

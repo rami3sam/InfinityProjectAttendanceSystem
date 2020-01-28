@@ -13,9 +13,9 @@ $.ajax({
       //Create table elements
       var json = JSON.parse(jsonText);
       for(let key in json){
-        var id = key.toString().padStart(4,'0');
+        var studentID = key.toString().padStart(4,'0');
         var studentName=json[key];
-        tableContents += '<tr><td>'+id+'</td><td>'+studentName+'</td><tr>';
+        tableContents += '<tr><td>'+studentID+'</td><td>'+studentName+'</td><tr>';
         
       }
       tableContents+='</table>';

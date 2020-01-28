@@ -53,11 +53,11 @@ def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
    
 
     #caculate face embedding
-def calculateEmbeddingsErrors(resnet,alignedFaces,students):
+def calculateEmbeddingsErrors(resnet,alignedFace,students):
     #torch.stack method accepts python array not tuples 
-    alignedFaces = [*alignedFaces]
-    alignedFaces = torch.stack(alignedFaces).to(device)
-    calculatedEmbeddings = resnet(alignedFaces).detach().cpu()
+    alignedFace = [alignedFace]
+    alignedFace = torch.stack(alignedFace).to(device)
+    calculatedEmbeddings = resnet(alignedFace).detach().cpu()
 
     minimumDistanceDict = dict()
     for studentID in students:
