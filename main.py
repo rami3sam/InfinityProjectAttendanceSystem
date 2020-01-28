@@ -60,8 +60,12 @@ def process():
 	#to break from main loop if user presses ESC
     return frame
 
-@app.route('/classMonitor')
+@app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/classMonitor')
+def classMonitor():
     return render_template('classMonitor.html')
 
 @app.route('/addStudent',methods=['GET','POST'])
