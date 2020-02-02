@@ -9,21 +9,16 @@ from facenet_pytorch import MTCNN,InceptionResnetV1
 import logging
 import pymongo
 from classes import *
-logger = logging.getLogger('infinity')
-#checks if torch library can use gpu if not not it chooses cpu
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-logger.info('Running on device: {}'.format(device))
-
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 STUDENTS_COL = 'students'
-mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
-appDatabase = mongoClient["infinity"]
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 
-#initialize MTCNN face detector
-faceDetector = MTCNNFaceDetector(device,True,True)
-#Initialize ResNet Inception Model
-resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+majors = ['Electronic Engineering' , 'Electrical Engineering','Mecahnical Engineering']
+years = ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
+
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def loadStudents():
     studentsBuffer = dict()
@@ -66,6 +61,9 @@ def calculateEmbeddingsErrors(resnet,alignedFace,students):
             distance = (calculatedEmbeddings - embeddings.embeddings).norm().item()
             distancesArray.append (distance)
         logger.info('{} distances are: {}'.format(studentID ,distancesArray))
+        if len(distancesArray) == 0:
+            continue
+            
         minimumDistance = min(distancesArray)  
         minimumDistanceDict[minimumDistance] = studentID
         logger.info('{} minimum  distance is : {}'.format(studentID , minimumDistance))
@@ -92,4 +90,22 @@ def createLogger(loggerName,logFilename,logToConsole):
     logger.setLevel(logging.INFO)
     return logger
 
-   
+
+
+if 'init' not in vars():
+    capture = cv2.VideoCapture(0)
+    logger = createLogger('infinity','log.txt',True)
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    #checks if torch library can use gpu if not not it chooses cpu
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    logger.info('Running on device: {}'.format(device))
+
+    mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
+    appDatabase = mongoClient["infinity"]
+    
+    #initialize MTCNN face detector
+    faceDetector = MTCNNFaceDetector(device,True,True)
+    #Initialize ResNet Inception Model
+    resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+    init = False

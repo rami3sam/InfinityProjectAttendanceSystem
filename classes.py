@@ -11,7 +11,7 @@ class Student:
         self.admissionYear = student['admissionYear']
         self.collegeYear = student['collegeYear']
         self.major = student['major']
-
+        self.lastImageIndex = student['lastImageIndex']
         embeddingsListBuffer=[]
         for embeddings in student['embeddingsList']:
             embeddingsListBuffer.append(pickle.loads(embeddings))
