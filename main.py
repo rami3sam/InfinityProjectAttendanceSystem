@@ -7,6 +7,10 @@ import datetime
 from flask_cors import CORS
 from core_functions import faceDetector,resnet,DETECTED_FACES_DIR,capture,calculateEmbeddingsErrors,drawOnFrame,loadStudents
 from flask import Flask, render_template,Response
+from PIL import Image
+import requests
+from io import BytesIO
+import numpy as np
 
 recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
@@ -19,8 +23,11 @@ def process():
     global recognizedStudentsListBuffer
     global recognizedStudentsList
     recognizedStudentsListBuffer = dict()
-    ret, frame = capture.read()
-    image = PIL.Image.fromarray(frame)
+    response = requests.get('http://192.168.43.1:8080/photo.jpg')
+    image = Image.open(BytesIO(response.content))
+    b, g, r = image.split()
+    image = Image.merge("RGB", (r, g, b))
+    frame = np.asarray(image)
     croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
     boxes,aligned = faceDetector.detectFace(image, croppedImageFilepath)
     if boxes is not None:

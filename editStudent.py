@@ -12,7 +12,7 @@ def editStudent(studentID):
     databaseQuery = {'ID':studentID}
     if request.method == 'GET':
             if appDatabase[STUDENTS_COL].count_documents(databaseQuery) > 0:
-                student = Student(appDatabase[STUDENTS_COL].find_one(databaseQuery))
+                student = Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),False)
                 return render_template('editStudent.html',now=now,majors=majors,
                 years=years,student=student)
             else:
@@ -26,10 +26,10 @@ def editStudent(studentID):
         studentMajor = request.form.get('studentMajor')
 
         if appDatabase[STUDENTS_COL].count_documents(databaseQuery) > 0:
-            studentFromDB = appDatabase[STUDENTS_COL].find_one(databaseQuery)
-            embeddingsList = studentFromDB['embeddingsList']
-            processedPhotos = studentFromDB['processedPhotos']
-            lastImageIndex = studentFromDB['lastImageIndex']
+            student = Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),False)
+            embeddingsList = student.embeddingsList
+            processedPhotos = student.processedPhotos
+            lastImageIndex = student.lastImageIndex
         
         images = request.files['images[]']
         if images and not images.filename == '':

@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger('infinity')
 
 class Student:
-    def __init__(self,student):
+    def __init__(self,student,decodeEmbeddings):
         self.ID = student['ID']
         self.processedPhotos = student['processedPhotos']
         self.name = student['name']
@@ -14,7 +14,10 @@ class Student:
         self.lastImageIndex = student['lastImageIndex']
         embeddingsListBuffer=[]
         for embeddings in student['embeddingsList']:
-            embeddingsListBuffer.append(pickle.loads(embeddings))
+            if decodeEmbeddings == True:
+                embeddingsListBuffer.append(pickle.loads(embeddings))
+            else:
+                embeddingsListBuffer.append(embeddings)
         self.embeddingsList = embeddingsListBuffer
 
 class Embeddings:

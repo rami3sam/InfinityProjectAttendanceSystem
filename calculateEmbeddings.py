@@ -29,16 +29,14 @@ def calculateStudentEmbeddings(studentID):
                     logger.info('Detecting faces in  : {}'.format(imagePath))
                     image = PIL.Image.open(imagePath)
                     imagePathCropped = os.path.join(dirpath ,'cropped', filename)
-                    boxes,aligned = faceDetector.detectFace(image,imagePathCropped)
+                    boxes,aligned = faceDetectorSingle.detectFace(image,imagePathCropped)
                     
                     logger.info('Calculating embeddings for : {}'.format(imagePath))
-                    if len(aligned) == 0:
+                    if aligned is None:
                         logger.info('Couldn\'t find faces in  : {}\n'.format(imagePath))
                         continue
                    
-                    alignedFaces = [aligned[0]]
-                    alignedFaces = torch.stack(alignedFaces).to(device)
-                    embeddings = resnet(alignedFaces).detach().cpu()
+                    embeddings = resnet(aligned.unsqueeze(0))
 
 
                     embeddings = Embeddings(filename,embeddings)

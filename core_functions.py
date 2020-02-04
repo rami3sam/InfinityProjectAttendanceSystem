@@ -24,7 +24,7 @@ def loadStudents():
     studentsBuffer = dict()
     students = appDatabase[STUDENTS_COL].find()
     for student in students:
-        studentsBuffer[student['ID']] = Student(student)
+        studentsBuffer[student['ID']] = Student(student,True)
         #print( studentsBuffer[student['ID']].ID)
     return studentsBuffer
 
@@ -106,6 +106,7 @@ if 'init' not in vars():
     
     #initialize MTCNN face detector
     faceDetector = MTCNNFaceDetector(device,True,True)
+    faceDetectorSingle = MTCNNFaceDetector(device,False,True)
     #Initialize ResNet Inception Model
     resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
     init = False
