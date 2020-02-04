@@ -4,21 +4,31 @@ import logging
 logger = logging.getLogger('infinity')
 
 class Student:
-    def __init__(self,student,decodeEmbeddings):
-        self.ID = student['ID']
-        self.processedPhotos = student['processedPhotos']
-        self.name = student['name']
-        self.admissionYear = student['admissionYear']
-        self.collegeYear = student['collegeYear']
-        self.major = student['major']
-        self.lastImageIndex = student['lastImageIndex']
+    def __init__(self,student=None,decodeEmbeddings=False):
+        if student is None:
+            student = dict()
+
+        self.ID = student.get('ID',-1)
+        self.processedPhotos = student.get('processedPhotos',[])
+        self.name = student.get('name','')
+        self.admissionYear = student.get('admissionYear','')
+        self.collegeYear = student.get('collegeYear','')
+        self.major = student.get('major','')
+        self.lastImageIndex = student.get('lastImageIndex',0)
         embeddingsListBuffer=[]
-        for embeddings in student['embeddingsList']:
+        
+        for embeddings in student.get('embeddingsList',[]):
             if decodeEmbeddings == True:
                 embeddingsListBuffer.append(pickle.loads(embeddings))
             else:
                 embeddingsListBuffer.append(embeddings)
+        
         self.embeddingsList = embeddingsListBuffer
+
+    def getStudentAsDict(self):
+        return dict(name=self.name,ID=self.ID,
+        collegeYear=self.collegeYear,admissionYear=self.admissionYear,major=self.major,
+        embeddingsList=self.embeddingsList,processedPhotos=self.processedPhotos,lastImageIndex=self.lastImageIndex)
 
 class Embeddings:
     def __init__(self,filename='',embeddings=None):

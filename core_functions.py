@@ -13,6 +13,7 @@ STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 STUDENTS_COL = 'students'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+THRESHOLD=0.9
 
 majors = ['Electronic Engineering' , 'Electrical Engineering','Mecahnical Engineering']
 years = ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
@@ -25,7 +26,6 @@ def loadStudents():
     students = appDatabase[STUDENTS_COL].find()
     for student in students:
         studentsBuffer[student['ID']] = Student(student,True)
-        #print( studentsBuffer[student['ID']].ID)
     return studentsBuffer
 
 def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
@@ -69,16 +69,20 @@ def calculateEmbeddingsErrors(resnet,alignedFace,students):
         logger.info('{} minimum  distance is : {}'.format(studentID , minimumDistance))
     
     if len(minimumDistanceDict) == 0:
-        return 0,'No students in the database'
+        return 'XXXXX','UNKNOWN'
     minimumDistance = min(minimumDistanceDict.keys())
-    closestStudentId = minimumDistanceDict.get(minimumDistance)
+
+    closestStudentId = int(minimumDistanceDict.get(minimumDistance))
+    closestStudentId = '{:04d}'.format(closestStudentId)
     closestStudentName = students[closestStudentId].name
-    logger.info(' student is likely to be: {} '.format(closestStudentName).center(80,'*'))
-    logger.info(' least distance is: {} '.format(minimumDistance).center(80,'*'))
 
-    return int(closestStudentId),closestStudentName
+    if minimumDistance > THRESHOLD:
+        closestStudentId = 'XXXXX'
+        closestStudentName = "UNKNOWN"
 
-       
+    logger.info(' student is likely to be: {} wtih distance {}'.format(closestStudentName,minimumDistance).center(80,'*'))
+    return '#{}'.format(closestStudentId),closestStudentName
+
 
 def createLogger(loggerName,logFilename,logToConsole):
     logger = logging.getLogger(loggerName)
@@ -91,9 +95,16 @@ def createLogger(loggerName,logFilename,logToConsole):
     return logger
 
 
+def checkForStudentExistence(studentID):
+    databaseQuery = {'ID':studentID}
+    return appDatabase[STUDENTS_COL].count_documents(databaseQuery) > 0
+
+def getStudentByID(studentID,decodeEmbeddings):
+    databaseQuery = {'ID':studentID}
+    return Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),decodeEmbeddings)
+
 
 if 'init' not in vars():
-    capture = cv2.VideoCapture(0)
     logger = createLogger('infinity','log.txt',True)
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)

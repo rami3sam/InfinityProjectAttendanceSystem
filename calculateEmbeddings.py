@@ -9,10 +9,10 @@ from core_functions import *
 def calculateStudentEmbeddings(studentID):
     databaseQuery = {'ID':studentID}
     studentDirPath = os.path.join("students_photos",studentID)
-    if appDatabase[STUDENTS_COL].count_documents(databaseQuery) == 1:
-        student = appDatabase[STUDENTS_COL].find_one(databaseQuery)
-        embeddingsList = student['embeddingsList']
-        processedPhotos = student['processedPhotos']
+    if checkForStudentExistence(studentID):
+        student = getStudentByID(studentID,False)
+        embeddingsList = student.embeddingsList
+        processedPhotos = student.processedPhotos
     else:
         return
 
@@ -20,7 +20,7 @@ def calculateStudentEmbeddings(studentID):
         #regualar expression to assert its a direct subdirectory to exclude cropped versions
         for filename in filenames:
             #checking if the file is .jpg to exclude embeddings
-            if re.match(r'.+\.jpg$' , filename):                    
+            if re.match(r'.+\.(jpg|jpeg)$' , filename):                    
                 #if embeddings are calculated there is no need to calculate it again
             
                 if  filename not in processedPhotos:
@@ -37,15 +37,12 @@ def calculateStudentEmbeddings(studentID):
                         continue
                    
                     embeddings = resnet(aligned.unsqueeze(0))
-
-
                     embeddings = Embeddings(filename,embeddings)
                     embeddings = pickle.dumps(embeddings)
 
                     embeddingsList.append(embeddings)
                     processedPhotos.append(filename)
  
-
                     logger.info('Successfully done : {}\n'.format(imagePath))
           
         appDatabase[STUDENTS_COL].update_one(databaseQuery , {'$set':{

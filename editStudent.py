@@ -1,7 +1,8 @@
 from __main__ import app
 from flask import request,render_template,Response,flash,redirect
 from calculateEmbeddings import calculateStudentEmbeddings
-from core_functions import appDatabase,STUDENTS_COL,years,majors,allowed_file,STUDENTS_PHOTOS_DIR
+from core_functions import appDatabase,STUDENTS_COL,years,majors,\
+allowed_file,STUDENTS_PHOTOS_DIR,checkForStudentExistence,getStudentByID
 import datetime
 import os
 from classes import Student
@@ -9,27 +10,25 @@ from classes import Student
 def editStudent(studentID):
     invalidEditOperation = Response('Invalid edit operation')
     now = datetime.datetime.now() 
-    databaseQuery = {'ID':studentID}
     if request.method == 'GET':
-            if appDatabase[STUDENTS_COL].count_documents(databaseQuery) > 0:
-                student = Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),False)
+            if checkForStudentExistence(studentID):
+                student = getStudentByID(studentID,False)
                 return render_template('editStudent.html',now=now,majors=majors,
                 years=years,student=student)
             else:
                 return invalidEditOperation
    
     if request.method == 'POST':
-        
         studentName = request.form.get('studentName')
         collegeYear = request.form.get('collegeYear')
         admissionYear = request.form.get('admissionYear')
         studentMajor = request.form.get('studentMajor')
 
-        if appDatabase[STUDENTS_COL].count_documents(databaseQuery) > 0:
-            student = Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),False)
-            embeddingsList = student.embeddingsList
-            processedPhotos = student.processedPhotos
+        if checkForStudentExistence(studentID):
+            student = getStudentByID(studentID,False)
             lastImageIndex = student.lastImageIndex
+        else:
+            return invalidEditOperation
         
         images = request.files['images[]']
         if images and not images.filename == '':
@@ -44,12 +43,12 @@ def editStudent(studentID):
                 else:
                     flash('Allowed file types are jpg, jpeg','error')
                     return redirect(request.url)
-                    
-        studentDict = dict(name=studentName,ID=studentID,
-        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor,
-        embeddingsList=embeddingsList,processedPhotos=processedPhotos,lastImageIndex=lastImageIndex)
         
-        if appDatabase[STUDENTS_COL].count_documents({'ID':studentID}) > 0:
+
+        student = student = getStudentByID(studentID,False)
+        studentDict = student.getStudentAsDict()
+        
+        if checkForStudentExistence(studentID):
             appDatabase[STUDENTS_COL].delete_many({'ID':studentID})
             appDatabase[STUDENTS_COL].insert_one(studentDict)
 

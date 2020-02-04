@@ -1,14 +1,15 @@
 from __main__ import app
 from flask import request,render_template,redirect,flash
-from core_functions import appDatabase,STUDENTS_COL,STUDENTS_PHOTOS_DIR,allowed_file,years,majors
+from core_functions import appDatabase,STUDENTS_COL,STUDENTS_PHOTOS_DIR,\
+allowed_file,years,majors,checkForStudentExistence
 from calculateEmbeddings import calculateStudentEmbeddings
 import os 
 import datetime
+from classes import Student
 @app.route('/addStudent',methods=['GET','POST'])
 def addStudent():
     now = datetime.datetime.now() 
     if request.method == 'GET':
-        
         return render_template('addStudent.html',now=now,majors=majors,years=years)
     if request.method == 'POST':
 
@@ -19,7 +20,7 @@ def addStudent():
         studentMajor = request.form.get('studentMajor')
 
         
-        if appDatabase[STUDENTS_COL].count_documents({'ID':studentID},limit=1) > 0:
+        if checkForStudentExistence(studentID):
             flash('Student ID must be unique','error')
             return redirect(request.url)
 
@@ -30,26 +31,31 @@ def addStudent():
 		
         images = request.files['images[]']
         if images.filename == '':
-            flash('No images selected for uploading','error')
+            flash('You must select at least one image','error')
             return redirect(request.url)
 
         lastImageIndex = 0
-        if images:
-            studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
-            os.makedirs(studentDir,exist_ok=True)
-            for i,image in enumerate(request.files.getlist("images[]")):
-                if  allowed_file(image.filename):
-                    imageFilename = '{:04d}'.format(i)
-                    imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
-                    image.save(imagePath)
-                    lastImageIndex = i
-                else:
-                    flash('Allowed file types are jpg, jpeg','error')
-                    return redirect(request.url)
         
-        studentDict = dict(name=studentName,ID=studentID,
-        collegeYear=collegeYear,admissionYear=admissionYear,major=studentMajor,
-        embeddingsList=[],processedPhotos=[],lastImageIndex=lastImageIndex)
+        studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
+        os.makedirs(studentDir,exist_ok=True)
+        for i,image in enumerate(request.files.getlist("images[]")):
+            if  allowed_file(image.filename):
+                imageFilename = '{:04d}'.format(i)
+                imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
+                image.save(imagePath)
+                lastImageIndex = i
+            else:
+                flash('Allowed file types are jpg, jpeg','error')
+                return redirect(request.url)
+                
+        student = Student()
+        student.ID = studentID
+        student.name = studentName
+        student.major = studentMajor
+        student.collegeYear = collegeYear
+        student.admissionYear = admissionYear
+        
+        studentDict = student.getStudentAsDict()
         appDatabase[STUDENTS_COL].insert_one(studentDict)
         calculateStudentEmbeddings(studentID)
         flash('Student added successfully','success')

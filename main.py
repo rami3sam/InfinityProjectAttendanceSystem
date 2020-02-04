@@ -5,7 +5,7 @@ import PIL
 import json
 import datetime
 from flask_cors import CORS
-from core_functions import faceDetector,resnet,DETECTED_FACES_DIR,capture,calculateEmbeddingsErrors,drawOnFrame,loadStudents
+from core_functions import faceDetector,resnet,DETECTED_FACES_DIR,calculateEmbeddingsErrors,drawOnFrame,loadStudents
 from flask import Flask, render_template,Response
 from PIL import Image
 import requests
@@ -14,6 +14,7 @@ import numpy as np
 
 recognizedStudentsList = dict()
 recognizedStudentsListBuffer = dict()
+CAMERA_URL = 'http://192.168.43.1:8080/photo.jpg'
 
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -23,18 +24,20 @@ def process():
     global recognizedStudentsListBuffer
     global recognizedStudentsList
     recognizedStudentsListBuffer = dict()
-    response = requests.get('http://192.168.43.1:8080/photo.jpg')
+    response = requests.get(CAMERA_URL)
     image = Image.open(BytesIO(response.content))
+    croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
+    boxes,aligned = faceDetector.detectFace(image, croppedImageFilepath)
+
     b, g, r = image.split()
     image = Image.merge("RGB", (r, g, b))
     frame = np.asarray(image)
-    croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
-    boxes,aligned = faceDetector.detectFace(image, croppedImageFilepath)
+
     if boxes is not None:
         for i in range(0,len(boxes)):
             studentID, studentName = calculateEmbeddingsErrors(resnet,aligned[i],students)
             
-            drawOnFrame(i,frame,boxes,'#{:04d}'.format(studentID))
+            drawOnFrame(i,frame,boxes,studentID)
             recognizedStudentsListBuffer[studentID] = studentName
     recognizedStudentsList = recognizedStudentsListBuffer
     return frame
@@ -80,10 +83,6 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
     
 
-
-
-    
-#clean up and free allocated resources
 
 
 
