@@ -51,3 +51,9 @@ class MTCNNFaceDetector:
         else:
             logger.info("no faces detected")
         return boundingBoxes,alignedFaces
+
+class RecognitionResult:
+    def __init__(self,faceID,studentID,errorValue):
+        self.faceID = faceID
+        self.studentID = studentID
+        self.errorValue = errorValue

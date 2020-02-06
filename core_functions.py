@@ -48,41 +48,38 @@ def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
    
 
     #caculate face embedding
-def calculateEmbeddingsErrors(resnet,alignedFace,students):
+def calculateEmbeddingsErrors(resnet,alignedFace,students,faceNumber):
     #torch.stack method accepts python array not tuples 
-    alignedFace = [alignedFace]
-    alignedFace = torch.stack(alignedFace).to(device)
-    calculatedEmbeddings = resnet(alignedFace).detach().cpu()
-
-    minimumDistanceDict = dict()
+    calculatedEmbeddings = resnet(alignedFace.unsqueeze(0))
+    faceErrorsList = []
     for studentID in students:
-        distancesArray = []
+        errorsList = []
         for embeddings in students[studentID].embeddingsList:
-            distance = (calculatedEmbeddings - embeddings.embeddings).norm().item()
-            distancesArray.append (distance)
-        logger.info('{} distances are: {}'.format(studentID ,distancesArray))
-        if len(distancesArray) == 0:
-            continue
-            
-        minimumDistance = min(distancesArray)  
-        minimumDistanceDict[minimumDistance] = studentID
-        logger.info('{} minimum  distance is : {}'.format(studentID , minimumDistance))
+            error = (calculatedEmbeddings - embeddings.embeddings).norm().item()
+            errorsList.append (error)
+        if len(errorsList) == 0:
+            continue         
+        minimumError = min(errorsList)        
+        if minimumError < THRESHOLD:
+            results = RecognitionResult(faceNumber,studentID,minimumError)
+            faceErrorsList.append(results)
     
-    if len(minimumDistanceDict) == 0:
-        return 'XXXXX','UNKNOWN'
-    minimumDistance = min(minimumDistanceDict.keys())
+    return faceErrorsList
 
-    closestStudentId = int(minimumDistanceDict.get(minimumDistance))
-    closestStudentId = '{:04d}'.format(closestStudentId)
-    closestStudentName = students[closestStudentId].name
-
-    if minimumDistance > THRESHOLD:
-        closestStudentId = 'XXXXX'
-        closestStudentName = "UNKNOWN"
-
-    logger.info(' student is likely to be: {} wtih distance {}'.format(closestStudentName,minimumDistance).center(80,'*'))
-    return '#{}'.format(closestStudentId),closestStudentName
-
+def processStudentsErrorsList(recognitionResultsList):
+    
+    recognitionResultsList = sorted(recognitionResultsList,key=lambda x: x.errorValue)
+    recognizedStudentsList = []
+    while len(recognitionResultsList) != 0 :
+        closestStudent = recognitionResultsList[0]
+        recognizedStudentsList.append(closestStudent)
+        print('recognizedStudentsList :{}'.format(recognizedStudentsList))
+        recognitionResultListTemp = []
+        for recognitionResult in recognitionResultsList:
+            if recognitionResult.faceID != closestStudent.faceID:
+                 recognitionResultListTemp.append(recognitionResult)
+        recognitionResultsList = recognitionResultListTemp
+    return recognizedStudentsList
 
 def createLogger(loggerName,logFilename,logToConsole):
     logger = logging.getLogger(loggerName)
