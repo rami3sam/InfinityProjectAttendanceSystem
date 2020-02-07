@@ -23,3 +23,7 @@ $.ajax({
     }
 });
 }// end of function
+
+function changeCamera(cameraURL){
+  $('#video').attr('src',('video_viewer/' + cameraURL));
+}

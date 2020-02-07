@@ -11,9 +11,20 @@
         <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
       </div>
   </div>
+
   <div id='main' class='row justify-content-center jumbotron col-12'> 
-        
-            <img id="video" class='img-fluid col-lg-8 col-sm-12' src="{{ url_for('video_viewer') }}" ></img> 
+    
+    <div id="cameraButtonsList" class='col-lg-8 col-sm-12 mb-1'>
+      <div  class="btn-group btn-group-lg" role="group" aria-label="Basic example">
+        {% for index in range(0,MAX_CAM_NO) %}
+        {% set disabled='disabled' if index >= CAM_NO else '' %}
+        <button onclick='changeCamera({{index}})' type="button" class="btn btn-secondary" {{ disabled }}>{{index+1}}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+
+            <img id="video" class=' col-lg-8 col-sm-12' src='video_viewer/0'></img> 
     
         <div id='divStudentsTable' class='col-lg-4 col-sm-12'></div>
   </div>

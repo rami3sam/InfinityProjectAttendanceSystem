@@ -37,3 +37,6 @@ td{
   background-color:rgb(255, 255, 255)
 }
 
+#cameraButtonsList{
+  overflow-x: scroll;
+}

@@ -15,36 +15,32 @@ import numpy as np
 import threading
 
 recognizedStudentsList = []
-CAMERA_URL = 'http://192.168.43.1:8080/photo.jpg'
-
+MAX_CAM_NO = 8
+CAMERA_URL_TEMP = 'http://{}:8080/photo.jpg'
+CAMERA_IP_ADDRESSES = ['192.168.43.1']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
 
-def process():   
+def processCameraFrame(image):   
     global students
     global recognizedStudentsList
-
-
     students = loadStudents()
     facesErrorsList = []
-    response = requests.get(CAMERA_URL)
-    image = Image.open(BytesIO(response.content))
     croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
-    boundingBoxes,aligned = faceDetector.detectFace(image, croppedImageFilepath)
+    boundingBoxes,alignedFaces = faceDetector.detectFace(image, croppedImageFilepath)
 
     b, g, r = image.split()
     image = Image.merge("RGB", (r, g, b))
-    frame = np.asarray(image)
+    cameraFrame = np.asarray(image)
 
     if boundingBoxes is not None:
         for faceID in range(0,len(boundingBoxes)):
-            faceErrorsList = calculateEmbeddingsErrors(resnet,aligned[faceID],students,faceID)
-           
+            faceErrorsList = calculateEmbeddingsErrors(faceID,alignedFaces[faceID],students,resnet)
             facesErrorsList.extend(faceErrorsList)
     recognizedStudentsList = processStudentsErrorsList(facesErrorsList)
     for recognizedStudent in recognizedStudentsList:
-        drawOnFrame(recognizedStudent.faceID,frame,boundingBoxes,recognizedStudent.studentID)
-    return frame
+        drawOnFrame(cameraFrame,recognizedStudent.faceID,recognizedStudent.studentID,boundingBoxes)
+    return cameraFrame
 
 @app.route('/')
 def index():
@@ -52,23 +48,26 @@ def index():
 
 @app.route('/classMonitor')
 def classMonitor():
-    return render_template('classMonitor.html')
+    CAM_NO = len(CAMERA_IP_ADDRESSES)
+    return render_template('classMonitor.html',MAX_CAM_NO=MAX_CAM_NO,CAM_NO=CAM_NO)
 
 
-def getFrame():
-    frame = process()
-    ret, jpeg = cv2.imencode('.jpg', frame)
+def getProcessedFrame(cameraURL):
+    response = requests.get(cameraURL)
+    image = Image.open(BytesIO(response.content))
+    cameraFrame = processCameraFrame(image)
+    ret, jpeg = cv2.imencode('.jpg', cameraFrame)
     return jpeg.tobytes()
 
-def video_stream():
+def video_stream(cameraID):
     while True:     
-        if frame != None:
+        if cameraFrames[cameraID] != None:
             yield (b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+                    b'Content-Type: image/jpeg\r\n\r\n' + cameraFrames[cameraID] + b'\r\n\r\n')
 
-@app.route('/video_viewer')
-def video_viewer():
-    return Response(video_stream(),
+@app.route('/video_viewer/<int:cameraID>')
+def video_viewer(cameraID):
+    return Response(video_stream(cameraID),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/recognized_students')
@@ -86,9 +85,15 @@ import editStudent
 import addStudent
 
 def cameraThread():
-    global frame
+    global cameraFrames
+    cameraFrames = [None] * len(CAMERA_IP_ADDRESSES)
+    cameraID = 0
     while True:
-        frame = getFrame()
+        cameraURL = CAMERA_URL_TEMP.format(CAMERA_IP_ADDRESSES[cameraID])
+        cameraFrames[cameraID] = getProcessedFrame(cameraURL)
+        cameraID+=1
+        if cameraID == len(CAMERA_IP_ADDRESSES):
+            cameraID = 0
 
 
 if __name__ == '__main__':

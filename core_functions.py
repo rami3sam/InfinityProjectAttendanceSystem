@@ -28,28 +28,26 @@ def loadStudents():
         studentsBuffer[student['ID']] = Student(student,True)
     return studentsBuffer
 
-def drawOnFrame(faceNumber,frame,boundingBoxes,studentID):
+def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes):
     boundingBoxes = np.array(boundingBoxes,dtype='int')
     #calculating coordinates for the border rectangle 
-    startingPoint = (boundingBoxes[faceNumber][0],boundingBoxes[faceNumber][1]) #x0 y0
-    endingPoint = (boundingBoxes[faceNumber][2],boundingBoxes[faceNumber][3]) #x1 y1
-    cv2.rectangle(frame,startingPoint,endingPoint,(0,0,255),2)  
-    logger.info('face {} : coordinates {} , {}'.format(faceNumber,startingPoint,endingPoint))
+    startingPoint = (boundingBoxes[faceID][0],boundingBoxes[faceID][1]) #x0 y0
+    endingPoint = (boundingBoxes[faceID][2],boundingBoxes[faceID][3]) #x1 y1
+    cv2.rectangle(cameraFrame,startingPoint,endingPoint,(0,0,255),2)  
     #calculating coordiantes for the label rectangle
-    startingPoint = (boundingBoxes[faceNumber][0],boundingBoxes[faceNumber][3]) #x0 y1
-    label_height = ((boundingBoxes[faceNumber][3] - boundingBoxes[faceNumber][1]) // 4)
-    endingPoint = (boundingBoxes[faceNumber][2],boundingBoxes[faceNumber][3] + label_height) #x1 y1+h
-    cv2.rectangle(frame,startingPoint,endingPoint,(0,0,255),-1) 
+    startingPoint = (boundingBoxes[faceID][0],boundingBoxes[faceID][3]) #x0 y1
+    label_height = ((boundingBoxes[faceID][3] - boundingBoxes[faceID][1]) // 4)
+    endingPoint = (boundingBoxes[faceID][2],boundingBoxes[faceID][3] + label_height) #x1 y1+h
+    cv2.rectangle(cameraFrame,startingPoint,endingPoint,(0,0,255),-1) 
 
     #textOrigin starting bottom left point and a bottom margin
     textOrigin = (startingPoint[0] ,endingPoint[1] - label_height // 5) 
     fontscale = label_height /40 
-    cv2.putText(frame,studentID,textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255),2)
+    cv2.putText(cameraFrame,studentID,textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255),2)
    
 
     #caculate face embedding
-def calculateEmbeddingsErrors(resnet,alignedFace,students,faceNumber):
-    #torch.stack method accepts python array not tuples 
+def calculateEmbeddingsErrors(faceID,alignedFace,students,resnet):
     calculatedEmbeddings = resnet(alignedFace.unsqueeze(0))
     faceErrorsList = []
     for studentID in students:
@@ -61,13 +59,11 @@ def calculateEmbeddingsErrors(resnet,alignedFace,students,faceNumber):
             continue         
         minimumError = min(errorsList)        
         if minimumError < THRESHOLD:
-            results = RecognitionResult(faceNumber,studentID,minimumError)
+            results = RecognitionResult(faceID,studentID,minimumError)
             faceErrorsList.append(results)
-    
     return faceErrorsList
 
 def processStudentsErrorsList(recognitionResultsList):
-    
     recognitionResultsList = sorted(recognitionResultsList,key=lambda x: x.errorValue)
     recognizedStudentsList = []
     while len(recognitionResultsList) != 0 :
