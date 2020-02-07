@@ -53,7 +53,8 @@ class MTCNNFaceDetector:
         return boundingBoxes,alignedFaces
 
 class RecognitionResult:
-    def __init__(self,faceID,studentID,errorValue):
+    def __init__(self,cameraID,faceID,studentID,errorValue):
+        self.cameraID = cameraID
         self.faceID = faceID
         self.studentID = studentID
         self.errorValue = errorValue

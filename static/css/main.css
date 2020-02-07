@@ -1,8 +1,11 @@
 #columnID{
-    width:25%;
+    width:20%;
 }
 #columnName{
-    width:75%;
+    width:70%;
+}
+#camcolor{
+    width:10;
 }
 
 .page-header {
@@ -39,4 +42,8 @@ td{
 
 #cameraButtonsList{
   overflow-x: scroll;
+}
+.square{
+  width:50px;
+  height:50px;
 }

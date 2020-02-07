@@ -21,6 +21,11 @@ years = ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def hexToRGB(hex):
+    hex = hex.lstrip('#')
+    hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
+    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+
 def loadStudents():
     studentsBuffer = dict()
     students = appDatabase[STUDENTS_COL].find()
@@ -28,17 +33,18 @@ def loadStudents():
         studentsBuffer[student['ID']] = Student(student,True)
     return studentsBuffer
 
-def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes):
+def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes,color):
+    color = hexToRGB(color)
     boundingBoxes = np.array(boundingBoxes,dtype='int')
     #calculating coordinates for the border rectangle 
     startingPoint = (boundingBoxes[faceID][0],boundingBoxes[faceID][1]) #x0 y0
     endingPoint = (boundingBoxes[faceID][2],boundingBoxes[faceID][3]) #x1 y1
-    cv2.rectangle(cameraFrame,startingPoint,endingPoint,(0,0,255),2)  
+    cv2.rectangle(cameraFrame,startingPoint,endingPoint,color,2)  
     #calculating coordiantes for the label rectangle
     startingPoint = (boundingBoxes[faceID][0],boundingBoxes[faceID][3]) #x0 y1
     label_height = ((boundingBoxes[faceID][3] - boundingBoxes[faceID][1]) // 4)
     endingPoint = (boundingBoxes[faceID][2],boundingBoxes[faceID][3] + label_height) #x1 y1+h
-    cv2.rectangle(cameraFrame,startingPoint,endingPoint,(0,0,255),-1) 
+    cv2.rectangle(cameraFrame,startingPoint,endingPoint,color,-1) 
 
     #textOrigin starting bottom left point and a bottom margin
     textOrigin = (startingPoint[0] ,endingPoint[1] - label_height // 5) 
@@ -47,7 +53,7 @@ def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes):
    
 
     #caculate face embedding
-def calculateEmbeddingsErrors(faceID,alignedFace,students,resnet):
+def calculateEmbeddingsErrors(cameraID ,faceID,alignedFace,students,resnet):
     calculatedEmbeddings = resnet(alignedFace.unsqueeze(0))
     faceErrorsList = []
     for studentID in students:
@@ -59,7 +65,7 @@ def calculateEmbeddingsErrors(faceID,alignedFace,students,resnet):
             continue         
         minimumError = min(errorsList)        
         if minimumError < THRESHOLD:
-            results = RecognitionResult(faceID,studentID,minimumError)
+            results = RecognitionResult(cameraID,faceID,studentID,minimumError)
             faceErrorsList.append(results)
     return faceErrorsList
 
