@@ -1,3 +1,4 @@
+#/bin/python
 import cv2
 import os
 import torch
@@ -17,7 +18,7 @@ import threading
 recognizedStudentsLists = []
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:8080/photo.jpg'
-CAMERA_IP_ADDRESSES = ['192.168.43.1','192.168.43.2']
+CAMERA_IP_ADDRESSES = ['127.0.0.1','192.168.43.1']
 CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -29,19 +30,21 @@ def processCameraFrame(cameraID,image):
     students = loadStudents()
     facesErrorsList[cameraID] = []
     croppedImageFilepath = os.path.join(DETECTED_FACES_DIR,'face.jpg')
-    boundingBoxes,alignedFaces = faceDetector.detectFace(image, croppedImageFilepath)
-
-    b, g, r = image.split()
-    image = Image.merge("RGB", (r, g, b))
+    boundingBoxes,detectedFaces = faceDetector.detectFace(image, croppedImageFilepath)
+    
+    #reverse colors in image from RGB to BGR
+    r, g, b = image.split()
+    image = Image.merge("RGB", (b, g, r))
     cameraFrame = np.asarray(image)
 
     if boundingBoxes is not None:
         for faceID in range(0,len(boundingBoxes)):
-            faceErrorsList = calculateEmbeddingsErrors(cameraID,faceID,alignedFaces[faceID],students,resnet)
+            faceErrorsList = calculateEmbeddingsErrors(cameraID,faceID,detectedFaces[faceID],students,resnet)
             facesErrorsList[cameraID].extend(faceErrorsList)
     recognizedStudentsLists[cameraID] = processStudentsErrorsList(facesErrorsList[cameraID])
     for recognizedStudent in recognizedStudentsLists[cameraID]:
         drawOnFrame(cameraFrame,recognizedStudent.faceID,recognizedStudent.studentID,boundingBoxes,CAM_COLORS[cameraID])
+
     return cameraFrame
 
 @app.route('/')
@@ -60,7 +63,8 @@ def getProcessedFrame(cameraID):
         cameraURL = CAMERA_URL_TEMP.format(CAMERA_IP_ADDRESSES[cameraID])
         response = requests.get(cameraURL)
         image = Image.open(BytesIO(response.content))
-    except:
+    except Exception as e:
+        print(e)
         recognizedStudentsLists[cameraID] = []
         return None
 

@@ -29,20 +29,19 @@ def calculateStudentEmbeddings(studentID):
                     logger.info('Detecting faces in  : {}'.format(imagePath))
                     image = PIL.Image.open(imagePath)
                     imagePathCropped = os.path.join(dirpath ,'cropped', filename)
-                    boxes,aligned = faceDetectorSingle.detectFace(image,imagePathCropped)
+                    boundingBoxes,detectedFace = faceDetectorSingle.detectFace(image,imagePathCropped)
                     
                     logger.info('Calculating embeddings for : {}'.format(imagePath))
-                    if aligned is None:
+                    if detectedFace is None:
                         logger.info('Couldn\'t find faces in  : {}\n'.format(imagePath))
                         continue
                    
-                    embeddings = resnet(aligned.unsqueeze(0))
+                    embeddings = resnet(detectedFace.unsqueeze(0))
                     embeddings = Embeddings(filename,embeddings)
                     embeddings = pickle.dumps(embeddings)
 
                     embeddingsList.append(embeddings)
                     processedPhotos.append(filename)
- 
                     logger.info('Successfully done : {}\n'.format(imagePath))
           
         appDatabase[STUDENTS_COL].update_one(databaseQuery , {'$set':{

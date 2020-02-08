@@ -53,8 +53,8 @@ def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes,color):
    
 
     #caculate face embedding
-def calculateEmbeddingsErrors(cameraID ,faceID,alignedFace,students,resnet):
-    calculatedEmbeddings = resnet(alignedFace.unsqueeze(0))
+def calculateEmbeddingsErrors(cameraID ,faceID,detectedFace,students,resnet):
+    calculatedEmbeddings = resnet(detectedFace.unsqueeze(0))
     faceErrorsList = []
     for studentID in students:
         errorsList = []

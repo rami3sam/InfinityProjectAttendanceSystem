@@ -22,7 +22,6 @@ class Student:
                 embeddingsListBuffer.append(pickle.loads(embeddings))
             else:
                 embeddingsListBuffer.append(embeddings)
-        
         self.embeddingsList = embeddingsListBuffer
 
     def getStudentAsDict(self):
@@ -42,24 +41,21 @@ class MTCNNFaceDetector:
         thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
         device=device,select_largest=selectLargestFace,keep_all=keepAll)
 
+    
     def detectFace(self,image,croppedImageFilename):
-        
         boundingBoxes,probabilites = self.mtcnn.detect(image)
-        #alignedFaces ,_ = self.mtcnn(image,return_prob=True,save_path=croppedImageFilename);
-        faces = []
-
+        detectedFaces = []
         croppedImageFilename = ''.join(croppedImageFilename.split('.')[0:-1])
         if boundingBoxes is not None:
             for index,boundingBox in enumerate(boundingBoxes):
-                
-                face = extract_face(image,boundingBox,160,0,'{}{}.jpg'.format(croppedImageFilename,index))
-                face = fixed_image_standardization(face)
-                faces.append(face)
+                detectedFace = extract_face(image,boundingBox,160,0,'{}{}.jpg'.format(croppedImageFilename,index))
+                detectedFace = fixed_image_standardization(detectedFace)
+                detectedFaces.append(detectedFace)
             logger.info('Faces detected: {} with probabilites: {} '
             .format(len(boundingBoxes) , probabilites))
         else:
             logger.info("no faces detected")
-        return boundingBoxes,faces
+        return boundingBoxes,detectedFaces
 
 class RecognitionResult:
     def __init__(self,cameraID,faceID,studentID,errorValue):

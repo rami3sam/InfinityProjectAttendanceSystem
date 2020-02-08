@@ -1,5 +1,5 @@
 
-setInterval(refreshDetectedStudents,1000);
+setInterval(refreshDetectedStudents,100);
 function refreshDetectedStudents(){
 
 $.ajax({
