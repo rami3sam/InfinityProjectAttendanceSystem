@@ -1,4 +1,4 @@
-from facenet_pytorch import MTCNN
+from facenet_pytorch import MTCNN,extract_face,fixed_image_standardization
 import pickle
 import logging
 logger = logging.getLogger('infinity')
@@ -43,14 +43,23 @@ class MTCNNFaceDetector:
         device=device,select_largest=selectLargestFace,keep_all=keepAll)
 
     def detectFace(self,image,croppedImageFilename):
-        alignedFaces ,_ = self.mtcnn(image,return_prob=True,save_path=croppedImageFilename);
+        
         boundingBoxes,probabilites = self.mtcnn.detect(image)
+        #alignedFaces ,_ = self.mtcnn(image,return_prob=True,save_path=croppedImageFilename);
+        faces = []
+
+        croppedImageFilename = ''.join(croppedImageFilename.split('.')[0:-1])
         if boundingBoxes is not None:
+            for index,boundingBox in enumerate(boundingBoxes):
+                
+                face = extract_face(image,boundingBox,160,0,'{}{}.jpg'.format(croppedImageFilename,index))
+                face = fixed_image_standardization(face)
+                faces.append(face)
             logger.info('Faces detected: {} with probabilites: {} '
             .format(len(boundingBoxes) , probabilites))
         else:
             logger.info("no faces detected")
-        return boundingBoxes,alignedFaces
+        return boundingBoxes,faces
 
 class RecognitionResult:
     def __init__(self,cameraID,faceID,studentID,errorValue):

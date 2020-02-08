@@ -15,10 +15,11 @@
   <div id='main' class='row justify-content-center jumbotron col-12'> 
     
     <div id="cameraButtonsList" class='col-lg-8 col-sm-12 mb-1'>
-      <div  class="btn-group btn-group-lg" role="group" aria-label="Basic example">
+      <div  class="btn-group btn-group-lg " id='camButtons' role="group" aria-label="Basic example">
         {% for index in range(0,MAX_CAM_NO) %}
         {% set disabled='disabled' if index >= CAM_NO else '' %}
-        <button onclick='changeCamera({{index}})' type="button" class="btn btn-secondary" {{ disabled }}>{{index+1}}</button>
+        {% set camColor= CAM_COLORS[index] %}
+        <button onclick='changeCamera({{index}})' type="button" class="btn btn-secondary" style="background-color: {{camColor}};" {{ disabled }}>{{index+1}}</button>
         {% endfor %}
       </div>
     </div>

@@ -18,7 +18,7 @@ recognizedStudentsLists = []
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:8080/photo.jpg'
 CAMERA_IP_ADDRESSES = ['192.168.43.1','192.168.43.2']
-CAM_COLORS = ['#FF0000' , '#00FF00']
+CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
 
@@ -51,7 +51,7 @@ def index():
 @app.route('/classMonitor')
 def classMonitor():
     CAM_NO = len(CAMERA_IP_ADDRESSES)
-    return render_template('classMonitor.html',MAX_CAM_NO=MAX_CAM_NO,CAM_NO=CAM_NO)
+    return render_template('classMonitor.html',MAX_CAM_NO=MAX_CAM_NO,CAM_NO=CAM_NO,CAM_COLORS=CAM_COLORS)
 
 
 def getProcessedFrame(cameraID):
