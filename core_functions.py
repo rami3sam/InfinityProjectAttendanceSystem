@@ -109,8 +109,11 @@ def setSettings(name,value):
         appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
     else:
         appDatabase[SETTINGS_COL].update_one({'settingsType':name} , {'$set' : {name:value}})
-def getSettings(name):
-    return appDatabase[SETTINGS_COL].find_one({'settingsType':name})[name]
+def getSettings(settingsName,default):
+    if appDatabase[SETTINGS_COL].count({'settingsType':settingsName}) > 0:
+        return appDatabase[SETTINGS_COL].find_one({'settingsType':settingsName})[settingsName]
+    else:
+        return default
 
 if 'init' not in vars():
     logger = createLogger('infinity','log.txt',True)

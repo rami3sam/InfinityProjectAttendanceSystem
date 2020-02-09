@@ -17,7 +17,7 @@ import threading
 recognizedStudentsLists = []
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:8080/photo.jpg'
-CAMERA_IP_ADDRESSES  = getSettings('cameraIPS')
+CAMERA_IP_ADDRESSES  = getSettings('cameraIPS',['127.0.0.1'])
 CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"

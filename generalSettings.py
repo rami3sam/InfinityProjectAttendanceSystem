@@ -6,7 +6,7 @@ from core_functions import appDatabase,getSettings,setSettings
 def generalSettings():
     cameraIPsList = []
     if request.method == 'GET':
-        cameraIPsList = getSettings('cameraIPS')
+        cameraIPsList = getSettings('cameraIPS',[])
         return render_template('generalSettings.html',MAX_CAM_NO=MAX_CAM_NO,cameraIPsList=cameraIPsList,len=len)
     elif request.method == 'POST':
         
