@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>General Settings</title>
+  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+    <div class='container'>
+        <div class='page-header'>
+          <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
+        </div>
+    </div>
+    
+  <div class='container col-lg-8 jumbotron '>
+  <form id="generalSettingsForm"  method="POST" enctype="multipart/form-data" >
+    <h4>General Settings:</h4>
+    {% for cameraNo in range(0,MAX_CAM_NO) %}
+    
+    <div class="form-group">
+        <div class="input-group mb-3 input-group-sm">
+           <div class="input-group-prepend">
+            
+             <span class="input-group-text ">Camera {{'{:02d}'.format(cameraNo)}} IP <span class='d-lg-inline d-none'>Address</span> :</span>
+          </div>
+          <input type="text" name='cameraIP{{cameraNo}}' pattern="^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$" class="form-control" value="{{cameraIPsList[cameraNo] if cameraNo < len(cameraIPsList) }}" />
+        </div>
+       </div>
+
+     
+    {% endfor %}
+     {% with messages = get_flashed_messages(with_categories=true) %}
+     {% if messages %}
+       <ul class=flashes>
+       {% for category, message in messages %}
+         <li class="{{ category }}">{{ message }}</li>
+       {% endfor %}
+       </ul>
+     {% endif %}
+   {% endwith %}
+   <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Save Settings</button>
+    </form>
+</div>
+
+
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'js/addStudent.js')}}"></script>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
+</body>
+</html>

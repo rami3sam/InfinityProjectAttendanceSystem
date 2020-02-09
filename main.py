@@ -7,18 +7,17 @@ import json
 import datetime
 from flask_cors import CORS
 from core_functions import faceDetector,resnet,DETECTED_FACES_DIR,calculateEmbeddingsErrors,\
-    drawOnFrame,loadStudents,processStudentsErrorsList,getStudentByID
-from flask import Flask, render_template,Response
+    drawOnFrame,loadStudents,processStudentsErrorsList,getStudentByID,getSettings
+from flask import Flask, render_template,Response,request
 from PIL import Image
 import requests
 from io import BytesIO
 import numpy as np
 import threading
-
 recognizedStudentsLists = []
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:8080/photo.jpg'
-CAMERA_IP_ADDRESSES = ['127.0.0.1','192.168.43.1']
+CAMERA_IP_ADDRESSES  = getSettings('cameraIPS')
 CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -64,7 +63,7 @@ def getProcessedFrame(cameraID):
         response = requests.get(cameraURL)
         image = Image.open(BytesIO(response.content))
     except Exception as e:
-        print(e)
+        #print(e)
         recognizedStudentsLists[cameraID] = []
         return None
 
@@ -107,6 +106,7 @@ import deleteStudent
 import studentsList
 import editStudent
 import addStudent
+import generalSettings
 
 def cameraThread():
     global cameraFrames

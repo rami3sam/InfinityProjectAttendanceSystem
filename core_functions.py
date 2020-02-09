@@ -12,6 +12,7 @@ from classes import *
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 STUDENTS_COL = 'students'
+SETTINGS_COL = 'settings'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 THRESHOLD=0.9
 
@@ -54,7 +55,8 @@ def drawOnFrame(cameraFrame,faceID,studentID,boundingBoxes,color):
 
     #caculate face embedding
 def calculateEmbeddingsErrors(cameraID ,faceID,detectedFace,students,resnet):
-    calculatedEmbeddings = resnet(detectedFace.unsqueeze(0))
+    detectedFace = torch.stack([detectedFace]).to(device)
+    calculatedEmbeddings = resnet(detectedFace).detach().cpu()
     faceErrorsList = []
     for studentID in students:
         errorsList = []
@@ -102,6 +104,13 @@ def getStudentByID(studentID,decodeEmbeddings):
     databaseQuery = {'ID':studentID}
     return Student(appDatabase[STUDENTS_COL].find_one(databaseQuery),decodeEmbeddings)
 
+def setSettings(name,value):
+    if appDatabase[SETTINGS_COL].count({'settingsType':name}) == 0:
+        appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
+    else:
+        appDatabase[SETTINGS_COL].update_one({'settingsType':name} , {'$set' : {name:value}})
+def getSettings(name):
+    return appDatabase[SETTINGS_COL].find_one({'settingsType':name})[name]
 
 if 'init' not in vars():
     logger = createLogger('infinity','log.txt',True)
