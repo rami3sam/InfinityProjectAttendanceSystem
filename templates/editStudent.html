@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit student information</title>
-  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-</head>
-<body>
-    <div class='container'>
-        <div class='page-header'>
-          <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
-        </div>
-    </div>
-    
+{% extends 'base.html' %}
+{% block body %}
+
   <div class='container col-lg-8 jumbotron '>
   <form id="addStudentForm"  method="POST" enctype="multipart/form-data" >
     <h4>Edit student information:</h4>
@@ -75,26 +64,8 @@
 
 
      <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Edit</button>
-
-     {% with messages = get_flashed_messages(with_categories=true) %}
-     {% if messages %}
-       <ul class=flashes>
-       {% for category, message in messages %}
-         <li class="{{ category }}">{{ message }}</li>
-       {% endfor %}
-       </ul>
-     {% endif %}
-   {% endwith %}
-
+     {%block flashMessage %}{{ super() }}{% endblock %}
     </form>
 </div>
 
-
-
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'js/addStudent.js')}}"></script>
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
-</body>
-</html>
+{% endblock %}

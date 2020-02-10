@@ -21,17 +21,17 @@ def addStudent():
 
         
         if checkForStudentExistence(studentID):
-            flash('Student ID must be unique','error')
+            flash('Student ID must be unique','danger')
             return redirect(request.url)
 
 
         if 'images[]' not in request.files:
-            flash('You must select at least one image','error')
+            flash('You must select at least one image','danger')
             return redirect(request.url)
 		
         images = request.files['images[]']
         if images.filename == '':
-            flash('You must select at least one image','error')
+            flash('You must select at least one image','danger')
             return redirect(request.url)
 
         lastImageIndex = 0
@@ -45,7 +45,7 @@ def addStudent():
                 image.save(imagePath)
                 lastImageIndex = i
             else:
-                flash('Allowed file types are jpg, jpeg','error')
+                flash('Allowed file types are jpg, jpeg','danger')
                 return redirect(request.url)
                 
         student = Student()

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Students List</title>
+  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+    <div class='container'>
+        <div class='page-header'>
+          <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
+        </div>
+    </div>
+    {% block body %}{% endblock %}
+
+    {% block flashMessage %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+
+      {% if category == 'success' %}
+       
+      {% else %}  
+      <div class="alert alert-{{category}} my-1" role="alert">
+        {{message}}
+      </div>
+      {% endif %}
+      {% endfor %}
+
+    {% endif %}
+    {% endwith %}
+    {% endblock %}
+
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
+<script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
+</body>
+</html>

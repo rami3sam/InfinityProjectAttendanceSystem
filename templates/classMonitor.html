@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Infinity Project</title>
-  <meta http-equiv="X-UA-Compatible" content='IE-Edge'/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-</head>
-<body>
-  <div class='container '>
-      <div class='page-header'>
-        <h1>Infinity Project <small>An Automatic Attendance System</small></h1>
-      </div>
-  </div>
+{% extends 'base.html' %}
+{% block body %}
 
   <div id='main' class='row justify-content-center jumbotron col-12'> 
     
@@ -28,13 +17,7 @@
             <img id="video" class=' col-lg-8 col-sm-12' src='video_viewer/0'></img> 
     
         <div id='divStudentsTable' class='col-lg-4 col-sm-12'></div>
+        <script type="text/javascript" src="{{ url_for('static', filename = 'js/classMonitor.js')}}"></script>
   </div>
 
-  
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'lib/css/bootstrap.css')}}"></link>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/jquery-3.4.1.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'lib/js/bootstrap.js')}}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename = 'js/scripts.js')}}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/main.css')}}"/>
-</body>
-</html>
+{% endblock %}

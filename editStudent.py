@@ -41,7 +41,7 @@ def editStudent(studentID):
                     imagePath = '{}.{}'.format(os.path.join(studentDir, imageFilename),'jpg')
                     image.save(imagePath)
                 else:
-                    flash('Allowed file types are jpg, jpeg','error')
+                    flash('Allowed file types are jpg, jpeg','danger')
                     return redirect(request.url)
         
 

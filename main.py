@@ -43,7 +43,7 @@ def processCameraFrame(cameraID,image):
     recognizedStudentsLists[cameraID] = processStudentsErrorsList(facesErrorsList[cameraID])
     for recognizedStudent in recognizedStudentsLists[cameraID]:
         drawOnFrame(cameraFrame,recognizedStudent.faceID,recognizedStudent.studentID,boundingBoxes,CAM_COLORS[cameraID])
-
+ 
     return cameraFrame
 
 @app.route('/')
