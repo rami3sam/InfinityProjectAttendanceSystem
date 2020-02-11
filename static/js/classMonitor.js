@@ -1,4 +1,6 @@
 
+
+var cameraID = 0
 setInterval(refreshDetectedStudents,100);
 function refreshDetectedStudents(){
 
@@ -39,8 +41,9 @@ $.ajax({
       $('#divStudentsTable').html(tableContents);
     }
 });
-}// end of function
 
-function changeCamera(cameraURL){
-  $('#video').attr('src',('video_viewer/' + cameraURL));
-}
+var timestamp = new Date().getTime();
+$('#video').attr('src','video_viewer/'+cameraID+"?t="+timestamp);
+
+
+}// end of function

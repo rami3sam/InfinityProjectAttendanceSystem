@@ -8,7 +8,7 @@
         {% for index in range(0,MAX_CAM_NO) %}
         {% set disabled='disabled' if index >= CAM_NO else '' %}
         {% set camColor= CAM_COLORS[index] %}
-        <button onclick='changeCamera({{index}})' type="button" class="btn btn-secondary" style="background-color: {{camColor}};" {{ disabled }}>{{index+1}}</button>
+        <button onclick='cameraID = {{index}}' type="button" class="btn btn-secondary" style="background-color: {{camColor}};" {{ disabled }}>{{index+1}}</button>
         {% endfor %}
       </div>
     </div>

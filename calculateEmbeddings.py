@@ -36,7 +36,8 @@ def calculateStudentEmbeddings(studentID):
                         logger.info('Couldn\'t find faces in  : {}\n'.format(imagePath))
                         continue
                    
-                    embeddings = resnet(detectedFace.unsqueeze(0))
+                    detectedFace = torch.stack([detectedFace[0]]).to(device)
+                    embeddings = resnet(detectedFace).detach().cpu()
                     embeddings = Embeddings(filename,embeddings)
                     embeddings = pickle.dumps(embeddings)
 

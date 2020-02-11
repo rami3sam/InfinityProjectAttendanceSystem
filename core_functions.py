@@ -9,6 +9,7 @@ from facenet_pytorch import MTCNN,InceptionResnetV1
 import logging
 import pymongo
 from classes import *
+
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 STUDENTS_COL = 'students'
@@ -128,7 +129,7 @@ if 'init' not in vars():
     
     #initialize MTCNN face detector
     faceDetector = MTCNNFaceDetector(device,True,True)
-    faceDetectorSingle = MTCNNFaceDetector(device,False,True)
+    #faceDetectorSingle = MTCNNFaceDetector(device,False,True)
     #Initialize ResNet Inception Model
     resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
     init = False
