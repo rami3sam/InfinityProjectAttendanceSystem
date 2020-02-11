@@ -1,7 +1,7 @@
 
 
 var cameraID = 0
-setInterval(refreshDetectedStudents,100);
+refreshDetectedStudents();
 function refreshDetectedStudents(){
 
 $.ajax({
@@ -45,5 +45,6 @@ $.ajax({
 var timestamp = new Date().getTime();
 $('#video').attr('src','video_viewer/'+cameraID+"?t="+timestamp);
 
+setTimeout(refreshDetectedStudents,100);
 
 }// end of function

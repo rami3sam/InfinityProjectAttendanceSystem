@@ -106,6 +106,7 @@ def recognitionThread():
         if cameraFrames[cameraID] is not None:
             cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
             os.rename(imageFilenameTemp,imageFilename)
+ 
         with open(studentsJsonListFNTemp,'w') as f:
             print(studentsJsonList , file=f)
 
