@@ -16,10 +16,11 @@ from facenet_pytorch import InceptionResnetV1
 from AppClasses import Student,MTCNNFaceDetector,RecognitionResult,Embeddings
 import DatabaseClient
 recognizedStudentsLists = []
+
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:{}/photo.jpg'
-
 THRESHOLD=0.9
+
 def hexToRGB(hex):
     hex = hex.lstrip('#')
     hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
@@ -133,7 +134,7 @@ class FaceRecognizer:
             cameraFrame = PIL.Image.open(BytesIO(response.content))
         except requests.exceptions.RequestException as e:
             print('Couldn\'t connect to camera {:02d}'.format(cameraID))
-            self.recognizedStudentsLists[cameraID] = []
+            self.cameraRecognizedStudentLists[cameraID] = []
             return None
          
         return cameraFrame
@@ -202,11 +203,15 @@ class FaceRecognizer:
     
     def recognize(self):
         cameraID = 0
-        while True:
+        facesErrorsList = [[None]] * self.camerasNumber
+        for _ in range(0,self.camerasNumber):
             for studentID in self.students:
                 self.calculateStudentEmbeddings(studentID)
 
             cameraFrame = self.getFrameFromCamera(cameraID)
+            if cameraFrame is None:
+                continue
+
             self.cameraFrames[cameraID] = self.processCameraFrame(cameraID,cameraFrame)
             recognizedStudentsJSONList = self.getRecognizedStudentsJSON()
 
@@ -224,14 +229,12 @@ class FaceRecognizer:
                 os.rename(studentsJsonListFNTemp,studentsJsonListFN)
 
             cameraID+=1
-            if cameraID == self.camerasNumber:
-                facesErrorsList = [[None]] * self.camerasNumber
-                cameraID = 0
 
 
 if __name__ == '__main__':
     rec = FaceRecognizer()
     print('using device : {}'.format(rec.device))
-    rec.recognize()
+    while True:
+        rec.recognize()
 
 

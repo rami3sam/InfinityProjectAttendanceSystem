@@ -23,7 +23,9 @@
     {% if messages %}
       {% for category, message in messages %}
       {% if category == 'success' %}
-      
+      <div class="alert alert-{{category}} my-1" role="alert">
+        {{message}}
+      </div>
       {% else %}  
       <div class="alert alert-{{category}} my-1" role="alert">
         {{message}}
