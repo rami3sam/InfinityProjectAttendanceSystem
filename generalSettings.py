@@ -1,12 +1,13 @@
 from __main__ import app,MAX_CAM_NO
 from flask import request,render_template,redirect,flash
-from core_functions import appDatabase,getSettings,setSettings
+import DatabaseClient
 
 @app.route('/generalSettings',methods=['GET','POST'])
 def generalSettings():
+    databaseClient = DatabaseClient.DatabaseClient()
     cameraIPsList = []
     if request.method == 'GET':
-        cameraIPsList = getSettings('cameraIPS',[])
+        cameraIPsList = databaseClient.getSettings('cameraIPS',[])
         return render_template('generalSettings.html',MAX_CAM_NO=MAX_CAM_NO,cameraIPsList=cameraIPsList,len=len)
     elif request.method == 'POST':
         
@@ -16,6 +17,6 @@ def generalSettings():
                 cameraIPsList.append(cameraIPValue)
             else:
                 break
-        setSettings('cameraIPS',cameraIPsList)
+        databaseClient.setSettings('cameraIPS',cameraIPsList)
     flash('Settings saved successfully','success')
     return redirect(request.url)

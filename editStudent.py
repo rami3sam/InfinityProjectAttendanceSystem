@@ -1,18 +1,20 @@
 from __main__ import app
 from flask import request,render_template,Response,flash,redirect
-from calculateEmbeddings import calculateStudentEmbeddings
-from core_functions import appDatabase,STUDENTS_COL,years,majors,\
-allowed_file,STUDENTS_PHOTOS_DIR,checkForStudentExistence,getStudentByID
+from core_functions import allowed_file,STUDENTS_PHOTOS_DIR
 import datetime
 import os
-from classes import Student
+from AppClasses import Student
+import DatabaseClient
 @app.route('/editStudent/<studentID>',methods=['GET','POST'])
 def editStudent(studentID):
+    databaseClient = DatabaseClient.DatabaseClient()
     invalidEditOperation = Response('Invalid edit operation')
     now = datetime.datetime.now() 
+    years = databaseClient.getCollegeYears()
+    majors = databaseClient.getMajors()
     if request.method == 'GET':
-            if checkForStudentExistence(studentID):
-                student = getStudentByID(studentID,False)
+            if databaseClient.checkForStudentExistence(studentID):
+                student = databaseClient.getStudentByID(studentID,False)
                 return render_template('editStudent.html',now=now,majors=majors,
                 years=years,student=student)
             else:
@@ -24,8 +26,8 @@ def editStudent(studentID):
         admissionYear = request.form.get('admissionYear')
         studentMajor = request.form.get('studentMajor')
 
-        if checkForStudentExistence(studentID):
-            student = getStudentByID(studentID,False)
+        if databaseClient.checkForStudentExistence(studentID):
+            student = databaseClient.getStudentByID(studentID,False)
             lastImageIndex = student.lastImageIndex
         else:
             return invalidEditOperation
@@ -45,13 +47,16 @@ def editStudent(studentID):
                     return redirect(request.url)
         
 
-        student = student = getStudentByID(studentID,False)
+        student = databaseClient.getStudentByID(studentID,False)
+        student.name = studentName
+        student.admissionYear = admissionYear
+        student.collegeYear = collegeYear
+        student.major = studentMajor
         studentDict = student.getStudentAsDict()
         
-        if checkForStudentExistence(studentID):
-            appDatabase[STUDENTS_COL].delete_many({'ID':studentID})
-            appDatabase[STUDENTS_COL].insert_one(studentDict)
+        if databaseClient.checkForStudentExistence(studentID):
+            databaseClient.deleteStudentByID(studentID)
+            databaseClient.insertStudent(studentDict)
 
-        calculateStudentEmbeddings(studentID)
         flash('Student editted successfully','success')
         return redirect(request.url)

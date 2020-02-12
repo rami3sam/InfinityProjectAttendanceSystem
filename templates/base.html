@@ -22,9 +22,8 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-
       {% if category == 'success' %}
-       
+      
       {% else %}  
       <div class="alert alert-{{category}} my-1" role="alert">
         {{message}}

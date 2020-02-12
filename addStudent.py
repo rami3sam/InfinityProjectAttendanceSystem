@@ -1,15 +1,17 @@
 from __main__ import app
 from flask import request,render_template,redirect,flash
-from core_functions import appDatabase,STUDENTS_COL,STUDENTS_PHOTOS_DIR,\
-allowed_file,years,majors,checkForStudentExistence
-from calculateEmbeddings import calculateStudentEmbeddings
+from core_functions import STUDENTS_PHOTOS_DIR,allowed_file
 import os 
 import datetime
-from classes import Student
+from AppClasses import Student
+import DatabaseClient
 @app.route('/addStudent',methods=['GET','POST'])
 def addStudent():
+    databaseClient = DatabaseClient.DatabaseClient()
     now = datetime.datetime.now() 
     if request.method == 'GET':
+        years = databaseClient.getCollegeYears()
+        majors = databaseClient.getMajors()
         return render_template('addStudent.html',now=now,majors=majors,years=years)
     if request.method == 'POST':
 
@@ -20,7 +22,7 @@ def addStudent():
         studentMajor = request.form.get('studentMajor')
 
         
-        if checkForStudentExistence(studentID):
+        if databaseClient.checkForStudentExistence(studentID):
             flash('Student ID must be unique','danger')
             return redirect(request.url)
 
@@ -56,7 +58,7 @@ def addStudent():
         student.admissionYear = admissionYear
         
         studentDict = student.getStudentAsDict()
-        appDatabase[STUDENTS_COL].insert_one(studentDict)
-        calculateStudentEmbeddings(studentID)
+        databaseClient.insertStudent(studentDict)
+      
         flash('Student added successfully','success')
         return redirect('/addStudent')

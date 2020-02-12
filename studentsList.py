@@ -1,9 +1,8 @@
 from __main__ import app
-from core_functions import appDatabase,STUDENTS_COL
+import DatabaseClient
 from flask import render_template
-@app.route('/studentsList/<pageNo>')
+@app.route('/studentsList/<int:pageNo>')
 def studentsList(pageNo):
-    studentsInPage = 10
-    pageNo = int(pageNo)
-    students = appDatabase[STUDENTS_COL].find().skip(pageNo*10).limit(10)
+    databaseClient = DatabaseClient.DatabaseClient()
+    students = databaseClient.getStudentsList(pageNo,10)
     return render_template('studentsList.html',students=students)

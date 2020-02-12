@@ -6,8 +6,7 @@ import PIL
 import json
 import datetime
 from flask_cors import CORS
-from core_functions import faceDetector,resnet,DETECTED_FACES_DIR,calculateEmbeddingsErrors,\
-    drawOnFrame,loadStudents,processStudentsErrorsList,getStudentByID,getSettings
+import DatabaseClient
 from flask import Flask, render_template,Response,request,make_response
 from PIL import Image
 import requests
@@ -15,11 +14,13 @@ from io import BytesIO
 import numpy as np
 import threading
 import faceRecognition
+import subprocess
 
+databaseClient = DatabaseClient.DatabaseClient()
 recognizedStudents = []
 MAX_CAM_NO = 8
 cameraFrames = [None] * MAX_CAM_NO
-CAMERA_IP_ADDRESSES  = getSettings('cameraIPS',['127.0.0.1:5000'])
+CAMERA_IP_ADDRESSES  = databaseClient.getSettings('cameraIPS',['127.0.0.1:5000'])
 CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -71,8 +72,6 @@ import generalSettings
 
 
 if __name__ == '__main__':
-    recongnitionThread1 = threading.Thread(target=faceRecognition.recognitionThread)
-    recongnitionThread1.start()
     app.run(host='0.0.0.0', threaded=True)
     
 

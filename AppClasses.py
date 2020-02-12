@@ -1,8 +1,11 @@
 from facenet_pytorch import MTCNN,extract_face,fixed_image_standardization
 import pickle
-import logging
 import torch
-logger = logging.getLogger('infinity')
+
+class Embeddings:
+    def __init__(self,filename='',embeddings=None):
+        self.filename=filename
+        self.embeddings=embeddings
 
 class Student:
     def __init__(self,student=None,decodeEmbeddings=False):
@@ -30,10 +33,7 @@ class Student:
         collegeYear=self.collegeYear,admissionYear=self.admissionYear,major=self.major,
         embeddingsList=self.embeddingsList,processedPhotos=self.processedPhotos,lastImageIndex=self.lastImageIndex)
 
-class Embeddings:
-    def __init__(self,filename='',embeddings=None):
-        self.filename=filename
-        self.embeddings=embeddings
+
 
 class MTCNNFaceDetector:
     def __init__(self,device,keepAll,selectLargestFace):
@@ -54,10 +54,7 @@ class MTCNNFaceDetector:
                 detectedFace = extract_face(image,boundingBox,160,0,'{}{}.jpg'.format(croppedImageFilename,index))
                 detectedFace = fixed_image_standardization(detectedFace)
                 detectedFaces.append(detectedFace)
-            logger.info('Faces detected: {} with probabilites: {} '
-            .format(len(boundingBoxes) , probabilites))
-        else:
-            logger.info("no faces detected")
+
         return boundingBoxes,detectedFaces
 
 class RecognitionResult:
