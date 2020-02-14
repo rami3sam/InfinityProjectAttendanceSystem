@@ -99,7 +99,7 @@ class FaceRecognizer:
     def processCameraFrame(self,cameraID,image):  
         self.facesErrorsList[cameraID] = []
         croppedImageFilepath = os.path.join(DatabaseClient.DETECTED_FACES_DIR,'face.jpg')
-        facesBoundingBoxes,detectedFaces = self.faceDetector.detectFace(image, croppedImageFilepath)
+        facesBoundingBoxes,detectedFaces = self.faceDetector.detectFace(image, croppedImageFilepath,True)
        
         #reverse colors in image from RGB to BGR
         r, g, b = image.split()
@@ -182,7 +182,7 @@ class FaceRecognizer:
                         print('Detecting faces in  : {}'.format(imagePath))
                         image = PIL.Image.open(imagePath)
                         imagePathCropped = os.path.join(dirpath ,'cropped', filename)
-                        boundingBoxes,detectedFace = self.faceDetector.detectFace(image,imagePathCropped)
+                        boundingBoxes,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
                         
                         print('Calculating embeddings for : {}'.format(imagePath))
                         if detectedFace is None:

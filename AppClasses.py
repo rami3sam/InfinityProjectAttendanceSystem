@@ -1,7 +1,7 @@
 from facenet_pytorch import MTCNN,extract_face,fixed_image_standardization
 import pickle
 import torch
-
+import numpy as np
 class Embeddings:
     def __init__(self,filename='',embeddings=None):
         self.filename=filename
@@ -44,13 +44,17 @@ class MTCNNFaceDetector:
         device=device,select_largest=selectLargestFace,keep_all=keepAll)
 
     
-    def detectFace(self,image,croppedImageFilename):
+    def detectFace(self,image,croppedImageFilename,multipleFaces=False):
         
         boundingBoxes,probabilites = self.mtcnn.detect(image)
         detectedFaces = []
         croppedImageFilename = ''.join(croppedImageFilename.split('.')[0:-1])
         if boundingBoxes is not None:
+            if multipleFaces == False:
+                maxProbIndex = np.argmax(probabilites)
+                boundingBoxes=[boundingBoxes[maxProbIndex]]
             for index,boundingBox in enumerate(boundingBoxes):
+              
                 detectedFace = extract_face(image,boundingBox,160,0,'{}{}.jpg'.format(croppedImageFilename,index))
                 detectedFace = fixed_image_standardization(detectedFace)
                 detectedFaces.append(detectedFace)
