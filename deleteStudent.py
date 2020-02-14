@@ -1,5 +1,5 @@
 from __main__ import app
-from core_functions import STUDENTS_PHOTOS_DIR
+from DatabaseClient import STUDENTS_PHOTOS_DIR
 from shutil import rmtree
 import os
 from flask import Response,redirect,request

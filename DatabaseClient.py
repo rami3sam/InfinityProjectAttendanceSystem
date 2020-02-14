@@ -7,6 +7,10 @@ SETTINGS_COL = 'settings'
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 class DatabaseClient:
     
     def __init__(self):
@@ -19,7 +23,7 @@ class DatabaseClient:
     def getStudentByID(self,studentID,decodeEmbeddings):
         databaseQuery = {'ID':studentID}
         return Student(self.appDatabase[STUDENTS_COL].find_one(databaseQuery),decodeEmbeddings)
-
+    
     def setSettings(self,name,value):
         if self.appDatabase[SETTINGS_COL].count({'settingsType':name}) == 0:
             self.appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
@@ -58,3 +62,5 @@ class DatabaseClient:
         return ['Electronic Engineering' , 'Electrical Engineering','Mecahnical Engineering']
     def getCollegeYears(self):
         return ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
+
+

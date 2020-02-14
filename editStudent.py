@@ -1,6 +1,6 @@
 from __main__ import app
 from flask import request,render_template,Response,flash,redirect
-from core_functions import allowed_file,STUDENTS_PHOTOS_DIR
+from DatabaseClient import allowed_file,STUDENTS_PHOTOS_DIR
 import datetime
 import os
 from AppClasses import Student

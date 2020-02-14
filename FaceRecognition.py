@@ -24,11 +24,12 @@ THRESHOLD=0.9
 def hexToRGB(hex):
     hex = hex.lstrip('#')
     hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
-    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+    return tuple(int(hex[processNumber:processNumber+2], 16) for processNumber in (0, 2, 4))
 
 
 class FaceRecognizer:
-    def __init__(self):
+    def __init__(self,processNumber):
+        self.processNumber = processNumber
         self.databaseClient = DatabaseClient.DatabaseClient()
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.faceDetector = MTCNNFaceDetector(self.device,True,True)
@@ -40,13 +41,14 @@ class FaceRecognizer:
         self.CAMERA_IP_ADDRESSES  = self.databaseClient.getSettings('cameraIPS',['127.0.0.1'])
         self.CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
         self.camerasNumber = len(self.CAMERA_IP_ADDRESSES)
-        self.cameraFrames = [None] * self.camerasNumber
-        self.facesErrorsList = [None] * self.camerasNumber
-        self.cameraRecognizedStudentLists = [[]] * self.camerasNumber
-    
+        self.calculateExistingStudentsEmbeddings()
+
     def calculateExistingStudentsEmbeddings(self):
         for studentID in self.students:
             self.calculateStudentEmbeddings(studentID)
+
+    def makeLabel(self,cameraID):
+        return 'PROC {:02} CAM {:02}:'.format(self.processNumber,cameraID)
 
     def drawLabelsOnFrame(self,cameraFrame,faceID,studentID,boundingBoxes,color):
         color = hexToRGB(color)
@@ -96,11 +98,12 @@ class FaceRecognizer:
         return recognizedStudentsList
 
 
-    def processCameraFrame(self,cameraID,image):  
-        self.facesErrorsList[cameraID] = []
+    def processCameraFrame(self,cameraID,image): 
+        label = self.makeLabel(cameraID) 
+        facesErrorsList = []
         croppedImageFilepath = os.path.join(DatabaseClient.DETECTED_FACES_DIR,'face.jpg')
         facesBoundingBoxes,detectedFaces = self.faceDetector.detectFace(image, croppedImageFilepath,True)
-       
+
         #reverse colors in image from RGB to BGR
         r, g, b = image.split()
         image = PIL.Image.merge("RGB", (b, g, r))
@@ -108,21 +111,22 @@ class FaceRecognizer:
         
         if facesBoundingBoxes is not None:
             detectedStudentsNumber = len(facesBoundingBoxes)
-            print('detected {} students',detectedStudentsNumber)
+            print(label,'detected {} students',detectedStudentsNumber)
             for faceID in range(0,detectedStudentsNumber):
 
                 faceErrorsList = self.calculateEmbeddingsErrors(cameraID,faceID,detectedFaces[faceID])
-                self.facesErrorsList[cameraID].extend(faceErrorsList)
+                facesErrorsList.extend(faceErrorsList)
         else:
-            print('no student was detected')
-        self.cameraRecognizedStudentLists[cameraID] = self.processStudentErrorsList(self.facesErrorsList[cameraID])
-        for recognizedStudent in self.cameraRecognizedStudentLists[cameraID]:
+            print(label,'no student was detected')
+        cameraRecognizedStudentList = self.processStudentErrorsList(facesErrorsList)
+        for recognizedStudent in cameraRecognizedStudentList:
             self.drawLabelsOnFrame(cameraFrame,recognizedStudent.faceID,recognizedStudent.studentID,facesBoundingBoxes,self.CAM_COLORS[cameraID])
             
-        return cameraFrame
+        return cameraFrame,cameraRecognizedStudentList
 
 
     def getFrameFromCamera(self,cameraID):
+        label = self.makeLabel(cameraID)
         try:
             IPAddressWithPort = self.CAMERA_IP_ADDRESSES[cameraID]
             if ':' in IPAddressWithPort:
@@ -133,16 +137,15 @@ class FaceRecognizer:
             response = requests.get(cameraURL)
             cameraFrame = PIL.Image.open(BytesIO(response.content))
         except requests.exceptions.RequestException as e:
-            print('Couldn\'t connect to camera {:02d}'.format(cameraID))
-            self.cameraRecognizedStudentLists[cameraID] = []
+            print(label,'Couldn\'t connect to camera')
             return None
          
         return cameraFrame
 
 
-    def getRecognizedStudentsJSON(self):
+    def getRecognizedStudentsJSON(self,cameraRecognizedStudentLists):
         studentsJsonList = dict()
-        for recognizedStudentsList in self.cameraRecognizedStudentLists:
+        for recognizedStudentsList in cameraRecognizedStudentLists:
             for recognizedStudent in recognizedStudentsList:
                 if studentsJsonList.get(recognizedStudent.studentID,None) == None:
                     recongizedStudentID = recognizedStudent.studentID
@@ -202,26 +205,30 @@ class FaceRecognizer:
             break
     
     def recognize(self):
+        self.reload()
         cameraID = 0
-        facesErrorsList = [[None]] * self.camerasNumber
+        cameraRecognizedStudentLists = [[None]] * self.camerasNumber
+        cameraFrames = [[None]] * self.camerasNumber
         for _ in range(0,self.camerasNumber):
-            for studentID in self.students:
-                self.calculateStudentEmbeddings(studentID)
+           
 
             cameraFrame = self.getFrameFromCamera(cameraID)
             if cameraFrame is None:
                 continue
 
-            self.cameraFrames[cameraID] = self.processCameraFrame(cameraID,cameraFrame)
-            recognizedStudentsJSONList = self.getRecognizedStudentsJSON()
+            cameraFrames[cameraID],cameraRecognizedStudentList = self.processCameraFrame(cameraID,cameraFrame)
+            cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
+            recognizedStudentsJSONList = self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
 
-            imageFilenameTemp = f'shared/cameraFrame{cameraID}~.jpg'
-            imageFilename = f'shared/cameraFrame{cameraID}.jpg'
-            studentsJsonListFNTemp = 'shared/studentsJsonList~.txt'
-            studentsJsonListFN = 'shared/studentsJsonList.txt'
+    
+            os.makedirs(f'shared/PROC_{self.processNumber:02d}',exist_ok=True)
+            imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'
+            imageFilename = f'shared/CAM_{cameraID:02d}.jpg'
+            studentsJsonListFNTemp = f'shared/RECOGNIZED_STUDENTS~.txt'
+            studentsJsonListFN = f'shared/RECOGNIZED_STUDENTS.txt'
 
-            if self.cameraFrames[cameraID] is not None:
-                cv2.imwrite(imageFilenameTemp,self.cameraFrames[cameraID])
+            if cameraFrames[cameraID] is not None:
+                cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
                 os.rename(imageFilenameTemp,imageFilename)
 
                 with open(studentsJsonListFNTemp,'w') as f:
@@ -229,12 +236,5 @@ class FaceRecognizer:
                 os.rename(studentsJsonListFNTemp,studentsJsonListFN)
 
             cameraID+=1
-
-
-if __name__ == '__main__':
-    rec = FaceRecognizer()
-    print('using device : {}'.format(rec.device))
-    while True:
-        rec.recognize()
 
 
