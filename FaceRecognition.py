@@ -221,7 +221,7 @@ class FaceRecognizer:
             recognizedStudentsJSONList = self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
 
     
-            os.makedirs(f'shared/PROC_{self.processNumber:02d}',exist_ok=True)
+            os.makedirs(f'shared/',exist_ok=True)
             imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'
             imageFilename = f'shared/CAM_{cameraID:02d}.jpg'
             studentsJsonListFNTemp = f'shared/RECOGNIZED_STUDENTS~.txt'

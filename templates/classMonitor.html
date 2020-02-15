@@ -9,16 +9,16 @@
         {% for index in range(0,MAX_CAM_NO) %}
         {% set disabled='disabled' if index >= CAM_NO else '' %}
         {% set camColor= CAM_COLORS[index] %}
-        <button onclick='changeCamera({{index}})' type="button" class="btn btn-secondary" style="background-color: {{camColor}};" {{ disabled }}>{{index+1}}</button>
+        
+        <button onclick="cameraID = '{{ '%02d'|format(index) }}'   " type="button" class="btn btn-secondary" style="background-color: {{camColor}};" {{ disabled }}>{{ '%02d'|format(index+1) }}</button>
         {% endfor %}
       </div>
     </div>
 
 
-            <img id="video" class=' col-lg-8 col-sm-12' src='video_viewer/0'></img> 
+            <img id="video" class=' col-lg-8 col-sm-12' src='video_viewer/00'></img> 
     
         <div id='divStudentsTable' class='col-lg-4 col-sm-12'></div>
         <script type="text/javascript" src="{{ url_for('static', filename = 'js/classMonitor.js')}}"></script>
-  </div>
-
+ 
 {% endblock %}

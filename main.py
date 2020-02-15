@@ -12,30 +12,32 @@ from PIL import Image
 import requests
 from io import BytesIO
 import numpy as np
-import threading
+import logging
 import FaceRecognition
 import multiprocessing
 
 databaseClient = DatabaseClient.DatabaseClient()
 recognizedStudents = []
 MAX_CAM_NO = 8
-cameraFrames = [None] * MAX_CAM_NO
-CAMERA_IP_ADDRESSES  = databaseClient.getSettings('cameraIPS',['127.0.0.1:5000'])
-CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
+
 NO_OF_PROCESSES = 3
 currentProcess = 0
 recogntionProcesses = []
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
 
+logging.getLogger('werkzeug').disabled = True
+os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+
+capture = cv2.VideoCapture(0)
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 def getFrame():
-    capture = cv2.VideoCapture(0)
+    
     ret, frame = capture.read()
-    capture.release()
     ret, jpeg = cv2.imencode('.jpg', frame)
     return jpeg.tobytes()
 
@@ -47,26 +49,21 @@ def getPCCameraFrame():
 
 @app.route('/classMonitor')
 def classMonitor():
+    CAMERA_IP_ADDRESSES  = databaseClient.getSettings('cameraIPS',['127.0.0.1:5000'])
+    CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
     CAM_NO = len(CAMERA_IP_ADDRESSES)
     return render_template('classMonitor.html',MAX_CAM_NO=MAX_CAM_NO,CAM_NO=CAM_NO,CAM_COLORS=CAM_COLORS)
 
 
 
 
-def getProcessedFrame(cameraID):
-    global currentProcess
-    while True:
-        with open(f'shared/CAM_{cameraID:02d}.jpg','rb') as f:
-            cameraFrame = f.read()
-   
-            yield (b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + cameraFrame + b'\r\n\r\n')
-
-@app.route('/video_viewer/<int:cameraID>')
+@app.route('/video_viewer/<cameraID>')
 def video_viewer(cameraID):
-    return Response(getProcessedFrame(cameraID),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
+    with open(f'shared/CAM_{cameraID}.jpg','rb') as f:
+        cameraFrame = f.read()
+    response = make_response(cameraFrame)
+    response.headers['Content-Type'] = 'image/jpeg'
+    return response
 
 @app.route('/recognized_students')
 def recognized_students():

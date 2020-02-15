@@ -18,5 +18,5 @@ def generalSettings():
             else:
                 break
         databaseClient.setSettings('cameraIPS',cameraIPsList)
-    flash('Settings saved successfully','success')
+    flash('Settings were saved successfully','success')
     return redirect(request.url)

@@ -58,5 +58,5 @@ def editStudent(studentID):
             databaseClient.deleteStudentByID(studentID)
             databaseClient.insertStudent(studentDict)
 
-        flash('Student editted successfully','success')
+        flash('Student was editted successfully','success')
         return redirect(request.url)

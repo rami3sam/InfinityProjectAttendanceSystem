@@ -18,25 +18,48 @@
     </div>
     {% block body %}{% endblock %}
 
+    
     {% block flashMessage %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
       {% if category == 'success' %}
-      <div class="alert alert-{{category}} my-1" role="alert">
-        {{message}}
+
+      <div class="modal" tabindex="-1" role="dialog" id ='successModal'>
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Success</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>{{message}}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <script>
+        $(function() { 
+        $('#successModal').modal('show'); 
+        });
+      </script>
+
       {% else %}  
       <div class="alert alert-{{category}} my-1" role="alert">
         {{message}}
       </div>
       {% endif %}
       {% endfor %}
-
     {% endif %}
     {% endwith %}
     {% endblock %}
-
+    </div>
 
 </body>
 </html>

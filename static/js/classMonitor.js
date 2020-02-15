@@ -1,4 +1,5 @@
 
+var cameraID = '00'
 refreshDetectedStudents();
 function refreshDetectedStudents(){
 
@@ -39,10 +40,11 @@ $.ajax({
       $('#divStudentsTable').html(tableContents);
     }
 });
-setTimeout(refreshDetectedStudents,100);
+
+var timestamp = new Date().getTime();
+$('#video').attr('src','video_viewer/'+cameraID+"?t="+timestamp);
+
+
+setTimeout(refreshDetectedStudents,33);
 
 }// end of function
-
-function changeCamera(cameraURL){
-  $('#video').attr('src',('video_viewer/' + cameraURL));
-}

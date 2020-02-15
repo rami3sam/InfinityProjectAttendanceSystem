@@ -60,5 +60,5 @@ def addStudent():
         studentDict = student.getStudentAsDict()
         databaseClient.insertStudent(studentDict)
       
-        flash('Student added successfully','success')
+        flash('Student was added successfully','success')
         return redirect('/addStudent')
