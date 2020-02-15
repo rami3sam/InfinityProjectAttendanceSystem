@@ -14,7 +14,7 @@ from io import BytesIO
 import numpy as np
 import logging
 import FaceRecognition
-import multiprocessing
+import torch.multiprocessing as multiprocessing
 
 databaseClient = DatabaseClient.DatabaseClient()
 recognizedStudents = []

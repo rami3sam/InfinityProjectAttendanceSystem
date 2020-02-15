@@ -229,11 +229,15 @@ class FaceRecognizer:
 
             if cameraFrames[cameraID] is not None:
                 cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
-                os.rename(imageFilenameTemp,imageFilename)
+                
 
                 with open(studentsJsonListFNTemp,'w') as f:
                     print(recognizedStudentsJSONList , file=f)
-                os.rename(studentsJsonListFNTemp,studentsJsonListFN)
+                try:
+                    os.rename(imageFilenameTemp,imageFilename)
+                    os.rename(studentsJsonListFNTemp,studentsJsonListFN)
+                except:
+                    pass
 
             cameraID+=1
 
