@@ -7,6 +7,8 @@ SETTINGS_COL = 'settings'
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 
+MAX_CAM_NO = 8
+
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -29,7 +31,7 @@ class DatabaseClient:
             self.appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
         else:
             self.appDatabase[SETTINGS_COL].update_one({'settingsType':name} , {'$set' : {name:value}})
-    def getSettings(self,settingsName,default):
+    def getSettings(self,settingsName,default=''):
         if self.appDatabase[SETTINGS_COL].count({'settingsType':settingsName}) > 0:
             return self.appDatabase[SETTINGS_COL].find_one({'settingsType':settingsName})[settingsName]
         else:
@@ -63,4 +65,15 @@ class DatabaseClient:
     def getCollegeYears(self):
         return ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
 
+    def getCameraColors(self):
+        return ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
+    
 
+    def saveDocument(self,columnName,documentType,value):
+        self.appDatabase[columnName].insert_one({'documentType':documentType,documentType:value})
+      
+    def loadDocument(self,columnName,documentType,default=None):
+        if self.appDatabase[columnName].count({'documentdocumentTypeName':documentType}) > 0:
+            return self.appDatabase[columnName].find_one({'documentType':documentType})[documentType]
+        else:
+            return default

@@ -1,4 +1,5 @@
-from __main__ import app,MAX_CAM_NO
+from __main__ import app
+from DatabaseClient import MAX_CAM_NO
 from flask import request,render_template,redirect,flash
 import DatabaseClient
 

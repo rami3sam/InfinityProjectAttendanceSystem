@@ -15,12 +15,18 @@ import numpy as np
 from facenet_pytorch import InceptionResnetV1
 from AppClasses import Student,MTCNNFaceDetector,RecognitionResult,Embeddings
 import DatabaseClient
+import torch.multiprocessing as multiprocessing
+import time
+import Attendance
+import sched
+import threading
 recognizedStudentsLists = []
 
+ATTENDANCE_TAKING_FREQ = 5
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:{}/photo.jpg'
 THRESHOLD=0.9
-
+ATTENDANCE_COL = 'attendance'
 def hexToRGB(hex):
     hex = hex.lstrip('#')
     hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
@@ -34,12 +40,20 @@ class FaceRecognizer:
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.faceDetector = MTCNNFaceDetector(self.device,True,True)
         self.resnet = InceptionResnetV1(pretrained='vggface2').eval().to(self.device)
+        self.attendance = dict()
+        self.attendanceFilename = f'output/Attendance-{datetime.datetime.now()}.txt'
+        self.minutesCounter = 0
         self.reload()
+        self.scheduler = sched.scheduler(time.time,time.sleep)
+        self.scheduler.enter(5,1,self.saveAttendance)
+        savingThread = threading.Thread(target=self.scheduler.run)
+        savingThread.start()
+        
 
     def reload(self):
         self.students = self.databaseClient.loadStudents()
         self.CAMERA_IP_ADDRESSES  = self.databaseClient.getSettings('cameraIPS',['127.0.0.1'])
-        self.CAM_COLORS = ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
+        self.CAM_COLORS = self.databaseClient.getCameraColors()
         self.camerasNumber = len(self.CAMERA_IP_ADDRESSES)
         self.calculateExistingStudentsEmbeddings()
 
@@ -161,6 +175,27 @@ class FaceRecognizer:
         return json.dumps(studentsJsonList)
 
 
+    def getAccumulatedAttendance(self,studentsJsonList,cameraRecognizedStudentLists):
+      
+        for recognizedStudentsList in cameraRecognizedStudentLists:
+            for recognizedStudent in recognizedStudentsList:
+                recongizedStudentID = recognizedStudent.studentID
+                student = self.databaseClient.getStudentByID(recongizedStudentID,False)
+                if studentsJsonList.get(recognizedStudent.studentID,None) == None:
+                    
+                    studentsJsonList[student.ID] = dict()
+                    
+                    studentsJsonList[student.ID]['name'] = student.name
+                    studentsJsonList[student.ID]['cameraID'] = [recognizedStudent.cameraID]
+                    studentsJsonList[student.ID]['colorMarkers'] = [self.CAM_COLORS[recognizedStudent.cameraID]]
+                    studentsJsonList[student.ID]['timesOfRecogniton'] = 1
+                else:
+                    if recognizedStudent.cameraID not in studentsJsonList[student.ID]['cameraID']
+                        studentsJsonList[student.ID]['cameraID'].append(recognizedStudent.cameraID)
+                    if CAM_COLORS[recognizedStudent.cameraID] not in studentsJsonList[student.ID]['cameraID']
+                        studentsJsonList[student.ID]['colorMarkers'].append(self.CAM_COLORS[recognizedStudent.cameraID])
+                    studentsJsonList[student.ID]['timesOfRecogniton'] +=1
+        return studentsJsonList
 
     def calculateStudentEmbeddings(self,studentID):
         
@@ -204,6 +239,7 @@ class FaceRecognizer:
             self.databaseClient.updateEmbeddings(studentID,embeddingsList,processedPhotos)
             break
     
+  
     def recognize(self):
         self.reload()
         cameraID = 0
@@ -219,8 +255,9 @@ class FaceRecognizer:
             cameraFrames[cameraID],cameraRecognizedStudentList = self.processCameraFrame(cameraID,cameraFrame)
             cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
             recognizedStudentsJSONList = self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
-
     
+            self.attendance = self.getAccumulatedAttendance(self.attendance,cameraRecognizedStudentLists)
+            
             os.makedirs(f'shared/',exist_ok=True)
             imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'
             imageFilename = f'shared/CAM_{cameraID:02d}.jpg'
@@ -242,3 +279,46 @@ class FaceRecognizer:
             cameraID+=1
 
 
+
+
+    def saveAttendance(self):   
+        
+        self.databaseClient.saveDocument(ATTENDANCE_COL,'ATTENDANCE',self.attendance)
+        self.attendance = dict()
+        self.minutesCounter+=1
+        self.scheduler.enter(5,1,self.saveAttendance)
+
+def writeVideo(cameraID):
+    os.makedirs('output',exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
+    height, width = frame.shape[:2]
+    videoWriter = cv2.VideoWriter(f'output/CAM_{cameraID}_{datetime.datetime.now()}.avi', fourcc, 30.0, (width,height))
+    print(f'starting to write camera {cameraID} output to harddisk')
+    while True:
+        frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
+        videoWriter.write(frame)
+        time.sleep(1/30)
+
+def recogntionProcess(processNumber):
+    rec = FaceRecognizer(processNumber)
+    print('using device : {}'.format(rec.device))
+    while True:
+        rec.recognize()
+
+if __name__ == '__main__':
+    databaseClient = DatabaseClient.DatabaseClient()
+    
+    process = multiprocessing.Process(target=recogntionProcess,args=[0])
+    process.start()
+        
+    time.sleep(10)
+
+    CAMERA_IP_ADDRESSES  = databaseClient.getSettings('cameraIPS',['127.0.0.1:5000'])
+    CAM_NO = len(CAMERA_IP_ADDRESSES)
+
+    for cameraNumber in range(CAM_NO):
+        process = multiprocessing.Process(target=writeVideo,args=[f'{cameraNumber:02d}'])
+        process.start()
+    
+    
