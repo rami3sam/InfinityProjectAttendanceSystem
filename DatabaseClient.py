@@ -3,6 +3,7 @@ import pymongo
 from AppClasses import Student
 STUDENTS_COL = 'students'
 SETTINGS_COL = 'settings'
+SHARED_COL = 'shared'
 
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
@@ -27,12 +28,12 @@ class DatabaseClient:
         return Student(self.appDatabase[STUDENTS_COL].find_one(databaseQuery),decodeEmbeddings)
     
     def setSettings(self,name,value):
-        if self.appDatabase[SETTINGS_COL].count({'settingsType':name}) == 0:
+        if self.appDatabase[SETTINGS_COL].count_documents({'settingsType':name}) == 0:
             self.appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
         else:
             self.appDatabase[SETTINGS_COL].update_one({'settingsType':name} , {'$set' : {name:value}})
     def getSettings(self,settingsName,default=''):
-        if self.appDatabase[SETTINGS_COL].count({'settingsType':settingsName}) > 0:
+        if self.appDatabase[SETTINGS_COL].count_documents({'settingsType':settingsName}) > 0:
             return self.appDatabase[SETTINGS_COL].find_one({'settingsType':settingsName})[settingsName]
         else:
             return default
@@ -70,10 +71,36 @@ class DatabaseClient:
     
 
     def saveDocument(self,columnName,documentType,value):
-        self.appDatabase[columnName].insert_one({'documentType':documentType,documentType:value})
+        self.appDatabase[columnName].insert_one({'documentType':documentType,**value})
+    
+    def prepareSelectionCriteria(self,selectionCritera,documentType):
+        if selectionCritera == None:
+            selectionCritera = dict({'documentType' : documentType})
+        elif '$and' in selectionCritera:
+            selectionCritera['$and'].append({'documentType' : documentType})
+        elif '$or' in selectionCritera:
+            selectionCritera['$and'] = [selectionCritera, {'documentType' : documentType}]
+        return selectionCritera
+
+    def updateDocument(self,columnName,documentType,selectionCritera,updateQuery):
+        selectionCritera = self.prepareSelectionCriteria(selectionCritera,documentType)
+
+        if self.appDatabase[columnName].count_documents({'documentType':documentType}):
+            self.appDatabase[columnName].update_one({'documentType':documentType,**selectionCritera},updateQuery)
+            return True
+        else:
+            return False
+
+    def deleteDocument(self,columnName,documentType,selectionCritera=None):
+        selectionCritera = self.prepareSelectionCriteria(selectionCritera,documentType)
+
+        if self.appDatabase[columnName].count_documents(selectionCritera) > 0:
+            self.appDatabase[columnName].delete_one(selectionCritera)
       
-    def loadDocument(self,columnName,documentType,default=None):
-        if self.appDatabase[columnName].count({'documentdocumentTypeName':documentType}) > 0:
-            return self.appDatabase[columnName].find_one({'documentType':documentType})[documentType]
+    def loadDocument(self,columnName,documentType,selectionCritera=None,default=None):
+        selectionCritera = self.prepareSelectionCriteria(selectionCritera,documentType)
+
+        if self.appDatabase[columnName].count_documents(selectionCritera) > 0:
+            return self.appDatabase[columnName].find_one(selectionCritera)
         else:
             return default

@@ -1,17 +1,21 @@
 #/bin/python
 import cv2
 import os
-import torch
 import json
-import datetime
 import time
 import DatabaseClient
 from DatabaseClient import MAX_CAM_NO
 from flask import Flask, render_template,Response,request,make_response
-import requests
 import logging
 import FaceRecognition
+import torch.multiprocessing as multiprocessing
+import videoRecording
+import threading
+
 databaseClient = DatabaseClient.DatabaseClient()
+
+logging.getLogger('werkzeug').disabled = True
+os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -22,17 +26,17 @@ capture = cv2.VideoCapture(0)
 def index():
     return render_template('index.html')
 
-def getFrame():
-    
-    ret, frame = capture.read()
-    ret, jpeg = cv2.imencode('.jpg', frame)
-    return jpeg.tobytes()
-
 @app.route('/photo.jpg')
 def getPCCameraFrame():
-    response = make_response(getFrame())
-    response.headers['Content-Type'] = 'image/jpeg'
-    return response
+    ret, frame = capture.read()
+    if ret is True:
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        imageBytes =  jpeg.tobytes()
+        response = make_response(imageBytes)
+        response.headers['Content-Type'] = 'image/jpeg'
+        return response
+    else:
+        return ''
 
 @app.route('/classMonitor')
 def classMonitor():
@@ -40,8 +44,6 @@ def classMonitor():
     CAM_COLORS = databaseClient.getCameraColors()
     CAM_NO = len(CAMERA_IP_ADDRESSES)
     return render_template('classMonitor.html',MAX_CAM_NO=MAX_CAM_NO,CAM_NO=CAM_NO,CAM_COLORS=CAM_COLORS)
-
-
 
 
 @app.route('/video_viewer/<cameraID>')
@@ -54,19 +56,45 @@ def video_viewer(cameraID):
 
 @app.route('/recognized_students')
 def recognized_students():
-    studentsJsonList = '{}'
-    with open(f'shared/RECOGNIZED_STUDENTS.txt','r') as f:
-            studentsJsonList = f.read()
-    return studentsJsonList
-    
+    studentsJsonList = databaseClient.loadDocument('shared','STUDENTS_JSON_LIST')
+    if studentsJsonList is not None:
+        del studentsJsonList['_id']
+        del studentsJsonList['documentType']
+        studentsJsonList = json.dumps(studentsJsonList)
+        return studentsJsonList
+    else:
+        return '{}'
+
 import deleteStudent
 import studentsList
 import editStudent
 import addStudent
 import generalSettings
 
-if __name__ == '__main__':
+def recogntionProcess(processNumber):
+    rec = FaceRecognition.FaceRecognizer(processNumber)
+    print('using device : {}'.format(rec.device))
+    while True:
+        rec.recognize()
+
+def runServer():
     app.run(host='0.0.0.0', threaded=True)
+
+if __name__ == '__main__':
+    print('starting flask server...')
+    serverThread = threading.Thread(target=runServer)
+    serverThread.start()
+
+    time.sleep(5)
+
+    for index in range(1):
+        process = multiprocessing.Process(target=recogntionProcess,args=[index])
+        process.start()
+    time.sleep(5)
+
+    videoRecording.startWritingVideo()
+    
+    
     
 
 

@@ -15,18 +15,16 @@ import numpy as np
 from facenet_pytorch import InceptionResnetV1
 from AppClasses import Student,MTCNNFaceDetector,RecognitionResult,Embeddings
 import DatabaseClient
-import torch.multiprocessing as multiprocessing
 import time
-import Attendance
-import sched
-import threading
 recognizedStudentsLists = []
 
 ATTENDANCE_TAKING_FREQ = 5
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:{}/photo.jpg'
 THRESHOLD=0.9
+TIME_PERIOD = 5
 ATTENDANCE_COL = 'attendance'
+ATTENDANCE_TAG = 'ATTENDANCE'
 def hexToRGB(hex):
     hex = hex.lstrip('#')
     hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
@@ -44,10 +42,6 @@ class FaceRecognizer:
         self.attendanceFilename = f'output/Attendance-{datetime.datetime.now()}.txt'
         self.minutesCounter = 0
         self.reload()
-        self.scheduler = sched.scheduler(time.time,time.sleep)
-        self.scheduler.enter(5,1,self.saveAttendance)
-        savingThread = threading.Thread(target=self.scheduler.run)
-        savingThread.start()
         
 
     def reload(self):
@@ -63,6 +57,47 @@ class FaceRecognizer:
 
     def makeLabel(self,cameraID):
         return 'PROC {:02} CAM {:02}:'.format(self.processNumber,cameraID)
+
+    def calculateStudentEmbeddings(self,studentID):
+        studentDirPath = os.path.join("students_photos",studentID)
+        if self.databaseClient.checkForStudentExistence(studentID):
+            student = self.databaseClient.getStudentByID(studentID,False)
+            embeddingsList = student.embeddingsList
+            processedPhotos = student.processedPhotos
+        else:
+            return
+
+        for (dirpath, dirnames, filenames) in os.walk(studentDirPath):
+            #regualar expression to assert its a direct subdirectory to exclude cropped versions
+            for filename in filenames:
+                #checking if the file is .jpg to exclude embeddings
+                if re.match(r'.+\.(jpg|jpeg)$' , filename):                    
+                    #if embeddings are calculated there is no need to calculate it again
+                
+                    if  filename not in processedPhotos:
+                        imagePath = os.path.join(studentDirPath,  filename)
+                        os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True)
+                        print('Detecting faces in  : {}'.format(imagePath))
+                        image = PIL.Image.open(imagePath)
+                        imagePathCropped = os.path.join(dirpath ,'cropped', filename)
+                        boundingBoxes,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
+                        
+                        print('Calculating embeddings for : {}'.format(imagePath))
+                        if detectedFace is None:
+                            print('Couldn\'t find faces in  : {}\n'.format(imagePath))
+                            continue
+                    
+                        detectedFace = torch.stack([detectedFace[0]]).to(self.device)
+                        embeddings = self.resnet(detectedFace).detach().cpu()
+                        embeddings = Embeddings(filename,embeddings)
+                        embeddings = pickle.dumps(embeddings)
+
+                        embeddingsList.append(embeddings)
+                        processedPhotos.append(filename)
+                        print('Successfully done : {}\n'.format(imagePath))
+                      
+            self.databaseClient.updateEmbeddings(studentID,embeddingsList,processedPhotos)
+            break
 
     def drawLabelsOnFrame(self,cameraFrame,faceID,studentID,boundingBoxes,color):
         color = hexToRGB(color)
@@ -80,7 +115,7 @@ class FaceRecognizer:
         textOrigin = (startingPoint[0] ,endingPoint[1] - label_height // 5) 
         fontscale = label_height /40 
         cv2.putText(cameraFrame,studentID,textOrigin,cv2.FONT_HERSHEY_COMPLEX,fontscale,(255,255,255),2)
-        #caculate face embedding
+        
     def calculateEmbeddingsErrors(self,cameraID ,faceID,detectedFace):
         detectedFace = torch.stack([detectedFace]).to(self.device)
         calculatedEmbeddings = self.resnet(detectedFace).detach().cpu()
@@ -150,7 +185,7 @@ class FaceRecognizer:
             cameraURL = CAMERA_URL_TEMP.format(IPAddress,port)
             response = requests.get(cameraURL)
             cameraFrame = PIL.Image.open(BytesIO(response.content))
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(label,'Couldn\'t connect to camera')
             return None
          
@@ -159,6 +194,7 @@ class FaceRecognizer:
 
     def getRecognizedStudentsJSON(self,cameraRecognizedStudentLists):
         studentsJsonList = dict()
+        self.databaseClient.deleteDocument('shared','STUDENTS_JSON_LIST')
         for recognizedStudentsList in cameraRecognizedStudentLists:
             for recognizedStudent in recognizedStudentsList:
                 if studentsJsonList.get(recognizedStudent.studentID,None) == None:
@@ -172,73 +208,35 @@ class FaceRecognizer:
                 else:
                     studentsJsonList[student.ID]['cameraID'].append(recognizedStudent.cameraID)
                     studentsJsonList[student.ID]['colorMarkers'].append(self.CAM_COLORS[recognizedStudent.cameraID])
-        return json.dumps(studentsJsonList)
+        self.databaseClient.saveDocument('shared','STUDENTS_JSON_LIST',studentsJsonList)
+        
+        
 
-
-    def getAccumulatedAttendance(self,studentsJsonList,cameraRecognizedStudentLists):
-      
+    def getAccumulatedAttendance(self,cameraRecognizedStudentLists):
+        now = time.time()
+        recogntionTime = now - ( now % TIME_PERIOD )
         for recognizedStudentsList in cameraRecognizedStudentLists:
             for recognizedStudent in recognizedStudentsList:
                 recongizedStudentID = recognizedStudent.studentID
                 student = self.databaseClient.getStudentByID(recongizedStudentID,False)
-                if studentsJsonList.get(recognizedStudent.studentID,None) == None:
-                    
-                    studentsJsonList[student.ID] = dict()
-                    
-                    studentsJsonList[student.ID]['name'] = student.name
-                    studentsJsonList[student.ID]['cameraID'] = [recognizedStudent.cameraID]
-                    studentsJsonList[student.ID]['colorMarkers'] = [self.CAM_COLORS[recognizedStudent.cameraID]]
-                    studentsJsonList[student.ID]['timesOfRecogniton'] = 1
+            
+            
+                selectionCriteria = {'$and' :  [{'id':student.ID},{'recogntionTime':recogntionTime}] }
+
+                if self.databaseClient.loadDocument(ATTENDANCE_COL,ATTENDANCE_TAG,selectionCriteria) is None:
+                   
+                    thisStudent = dict()
+                    thisStudent['id'] = student.ID
+                    thisStudent['name'] = student.name
+                    thisStudent['cameraID'] = [recognizedStudent.cameraID]
+                    thisStudent['timesOfRecogniton'] = 1
+                    thisStudent['recogntionTime'] = recogntionTime
+                    self.databaseClient.saveDocument(ATTENDANCE_COL,ATTENDANCE_TAG,thisStudent)
                 else:
-                    if recognizedStudent.cameraID not in studentsJsonList[student.ID]['cameraID']
-                        studentsJsonList[student.ID]['cameraID'].append(recognizedStudent.cameraID)
-                    if CAM_COLORS[recognizedStudent.cameraID] not in studentsJsonList[student.ID]['cameraID']
-                        studentsJsonList[student.ID]['colorMarkers'].append(self.CAM_COLORS[recognizedStudent.cameraID])
-                    studentsJsonList[student.ID]['timesOfRecogniton'] +=1
-        return studentsJsonList
+                 
+                    updateQuery = {'$inc' : {'timesOfRecogniton':1} , '$addToSet': {'cameraID' : recognizedStudent.cameraID} }
+                    self.databaseClient.updateDocument(ATTENDANCE_COL,ATTENDANCE_TAG,selectionCriteria,updateQuery)
 
-    def calculateStudentEmbeddings(self,studentID):
-        
-        studentDirPath = os.path.join("students_photos",studentID)
-        if self.databaseClient.checkForStudentExistence(studentID):
-            student = self.databaseClient.getStudentByID(studentID,False)
-            embeddingsList = student.embeddingsList
-            processedPhotos = student.processedPhotos
-        else:
-            return
-
-        for (dirpath, dirnames, filenames) in os.walk(studentDirPath):
-            #regualar expression to assert its a direct subdirectory to exclude cropped versions
-            for filename in filenames:
-                #checking if the file is .jpg to exclude embeddings
-                if re.match(r'.+\.(jpg|jpeg)$' , filename):                    
-                    #if embeddings are calculated there is no need to calculate it again
-                
-                    if  filename not in processedPhotos:
-                        imagePath = os.path.join(studentDirPath,  filename)
-                        os.makedirs(os.path.join(dirpath ,'cropped') ,exist_ok=True)
-                        print('Detecting faces in  : {}'.format(imagePath))
-                        image = PIL.Image.open(imagePath)
-                        imagePathCropped = os.path.join(dirpath ,'cropped', filename)
-                        boundingBoxes,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
-                        
-                        print('Calculating embeddings for : {}'.format(imagePath))
-                        if detectedFace is None:
-                            print('Couldn\'t find faces in  : {}\n'.format(imagePath))
-                            continue
-                    
-                        detectedFace = torch.stack([detectedFace[0]]).to(self.device)
-                        embeddings = self.resnet(detectedFace).detach().cpu()
-                        embeddings = Embeddings(filename,embeddings)
-                        embeddings = pickle.dumps(embeddings)
-
-                        embeddingsList.append(embeddings)
-                        processedPhotos.append(filename)
-                        print('Successfully done : {}\n'.format(imagePath))
-                      
-            self.databaseClient.updateEmbeddings(studentID,embeddingsList,processedPhotos)
-            break
-    
   
     def recognize(self):
         self.reload()
@@ -254,71 +252,27 @@ class FaceRecognizer:
 
             cameraFrames[cameraID],cameraRecognizedStudentList = self.processCameraFrame(cameraID,cameraFrame)
             cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
-            recognizedStudentsJSONList = self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
+            self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
     
-            self.attendance = self.getAccumulatedAttendance(self.attendance,cameraRecognizedStudentLists)
+            self.attendance = self.getAccumulatedAttendance(cameraRecognizedStudentLists)
             
             os.makedirs(f'shared/',exist_ok=True)
             imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'
             imageFilename = f'shared/CAM_{cameraID:02d}.jpg'
-            studentsJsonListFNTemp = f'shared/RECOGNIZED_STUDENTS~.txt'
-            studentsJsonListFN = f'shared/RECOGNIZED_STUDENTS.txt'
+       
 
             if cameraFrames[cameraID] is not None:
                 cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
-                
-
-                with open(studentsJsonListFNTemp,'w') as f:
-                    print(recognizedStudentsJSONList , file=f)
                 try:
                     os.rename(imageFilenameTemp,imageFilename)
-                    os.rename(studentsJsonListFNTemp,studentsJsonListFN)
                 except:
                     pass
 
             cameraID+=1
 
-
-
-
-    def saveAttendance(self):   
-        
-        self.databaseClient.saveDocument(ATTENDANCE_COL,'ATTENDANCE',self.attendance)
-        self.attendance = dict()
-        self.minutesCounter+=1
-        self.scheduler.enter(5,1,self.saveAttendance)
-
-def writeVideo(cameraID):
-    os.makedirs('output',exist_ok=True)
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
-    height, width = frame.shape[:2]
-    videoWriter = cv2.VideoWriter(f'output/CAM_{cameraID}_{datetime.datetime.now()}.avi', fourcc, 30.0, (width,height))
-    print(f'starting to write camera {cameraID} output to harddisk')
-    while True:
-        frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
-        videoWriter.write(frame)
-        time.sleep(1/30)
-
-def recogntionProcess(processNumber):
-    rec = FaceRecognizer(processNumber)
-    print('using device : {}'.format(rec.device))
-    while True:
-        rec.recognize()
-
-if __name__ == '__main__':
-    databaseClient = DatabaseClient.DatabaseClient()
     
-    process = multiprocessing.Process(target=recogntionProcess,args=[0])
-    process.start()
-        
-    time.sleep(10)
 
-    CAMERA_IP_ADDRESSES  = databaseClient.getSettings('cameraIPS',['127.0.0.1:5000'])
-    CAM_NO = len(CAMERA_IP_ADDRESSES)
 
-    for cameraNumber in range(CAM_NO):
-        process = multiprocessing.Process(target=writeVideo,args=[f'{cameraNumber:02d}'])
-        process.start()
+    
     
     
