@@ -84,10 +84,9 @@ if __name__ == '__main__':
     print('starting flask server...')
     serverThread = threading.Thread(target=runServer)
     serverThread.start()
-
     time.sleep(5)
 
-    for index in range(1):
+    for index in range(3):
         process = multiprocessing.Process(target=recogntionProcess,args=[index])
         process.start()
     time.sleep(5)

@@ -35,8 +35,6 @@ def addStudent():
         if images.filename == '':
             flash('You must select at least one image','danger')
             return redirect(request.url)
-
-        lastImageIndex = 0
         
         studentDir = os.path.join(STUDENTS_PHOTOS_DIR , studentID)
         os.makedirs(studentDir,exist_ok=True)
@@ -56,7 +54,8 @@ def addStudent():
         student.major = studentMajor
         student.collegeYear = collegeYear
         student.admissionYear = admissionYear
-        
+        student.lastImageIndex = lastImageIndex
+
         studentDict = student.getStudentAsDict()
         databaseClient.insertStudent(studentDict)
       

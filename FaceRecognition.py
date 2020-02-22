@@ -80,7 +80,7 @@ class FaceRecognizer:
                         print('Detecting faces in  : {}'.format(imagePath))
                         image = PIL.Image.open(imagePath)
                         imagePathCropped = os.path.join(dirpath ,'cropped', filename)
-                        boundingBoxes,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
+                        _,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
                         
                         print('Calculating embeddings for : {}'.format(imagePath))
                         if detectedFace is None:
@@ -212,7 +212,7 @@ class FaceRecognizer:
         
         
 
-    def getAccumulatedAttendance(self,cameraRecognizedStudentLists):
+    def pushAttendance(self,cameraRecognizedStudentLists):
         now = time.time()
         recogntionTime = now - ( now % TIME_PERIOD )
         for recognizedStudentsList in cameraRecognizedStudentLists:
@@ -254,7 +254,7 @@ class FaceRecognizer:
             cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
             self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
     
-            self.attendance = self.getAccumulatedAttendance(cameraRecognizedStudentLists)
+            self.pushAttendance(cameraRecognizedStudentLists)
             
             os.makedirs(f'shared/',exist_ok=True)
             imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'

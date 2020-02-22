@@ -52,6 +52,8 @@ def editStudent(studentID):
         student.admissionYear = admissionYear
         student.collegeYear = collegeYear
         student.major = studentMajor
+        student.lastImageIndex = lastImageIndex
+        
         studentDict = student.getStudentAsDict()
         
         if databaseClient.checkForStudentExistence(studentID):
