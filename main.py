@@ -11,11 +11,11 @@ import FaceRecognition
 import torch.multiprocessing as multiprocessing
 import videoRecording
 import threading
+import argparse
 
 databaseClient = DatabaseClient.DatabaseClient()
 
-logging.getLogger('werkzeug').disabled = True
-os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+
 
 app = Flask(__name__)
 app.secret_key = "INFINITY_APP"
@@ -70,6 +70,10 @@ import studentsList
 import editStudent
 import addStudent
 import generalSettings
+import lecturesList
+import addLecture
+import deleteLecture
+import editLecture
 
 def recogntionProcess(processNumber):
     rec = FaceRecognition.FaceRecognizer(processNumber)
@@ -81,17 +85,27 @@ def runServer():
     app.run(host='0.0.0.0', threaded=True)
 
 if __name__ == '__main__':
-    print('starting flask server...')
+    parser = argparse.ArgumentParser(description='Infinity Project Attendance System')
+    parser.add_argument('-js' ,dest='just_server',action='store_true',help='just start the server')
+    parser.add_argument('-df' ,dest='debug_flask',action='store_true',help='show flask debugging information')
+    args = parser.parse_args()
+
+    if args.debug_flask == False:
+        logging.getLogger('werkzeug').disabled = True
+        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+    
     serverThread = threading.Thread(target=runServer)
     serverThread.start()
     time.sleep(5)
+    print('flask server started. ')
 
-    for index in range(3):
-        process = multiprocessing.Process(target=recogntionProcess,args=[index])
-        process.start()
-    time.sleep(5)
+    if args.just_server == False:
+        for index in range(3):
+            process = multiprocessing.Process(target=recogntionProcess,args=[index])
+            process.start()
+        time.sleep(5)
 
-    videoRecording.startWritingVideo()
+        videoRecording.startWritingVideo()
     
     
     

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%block title%}Edit Lecture{%endblock%}
+{%block title%}Add Lecture{%endblock%}
 {% block body %}
     
   <div class='container col-lg-8 jumbotron '>
@@ -13,7 +13,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text ">Lecture Name:</span>
        </div>
-       <input type="text" name='lectureName' class="form-control" required/>
+       <input type="text" value="{{lecture['lectureName']}}" name='lectureName' class="form-control" required/>
      </div>
     </div>
 
@@ -22,7 +22,7 @@
          <div class="input-group-prepend">
            <span class="input-group-text ">Teacher Name:</span>
         </div>
-        <input type="text" name='lectureTeacher' class="form-control" required/>
+        <input type="text" value="{{lecture['lectureTeacher']}}"  name='lectureTeacher' class="form-control" required/>
       </div>
      </div>
 
@@ -30,7 +30,8 @@
       <label for="lectureMajor">Select Major:</label>
       <select class="form-control" name="lectureMajor">
         {% for major in majors%}
-        <option value='{{major}}'>{{major}}</option>
+        {% set selected = 'selected' if lecture['lectureMajor'] == major else ''%}
+        <option value='{{major}}' {{selected}}>{{major}}</option>
         {% endfor %}
       </select>
     </div>
@@ -39,7 +40,8 @@
       <label for="collegeYear">Select Year:</label>
       <select class="form-control" name="lectureYear">
         {% for year in years %}
-        <option value='{{year}}'>{{year}}</option>
+        {% set selected = 'selected' if lecture['lectureYear'] == year else ''%}
+        <option value='{{year}}' {{selected}}>{{year}}</option>
         {% endfor %}
       </select>
     </div>
@@ -53,7 +55,8 @@
 
       <select class="form-control " name="lectureDay">
         {% for day in days %}
-        <option value='{{day}}'>{{day}}</option>
+        {% set selected = 'selected' if lecture['lectureDay'] == day else ''%}
+        <option value='{{day}}' {{selected}}>{{day}}</option>
         {% endfor %}
       </select>
       </div>
@@ -63,7 +66,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text">Lecture Time</span>
        </div>
-      <input class="form-control" id="lectureTime" type="time" name="lectureTime" step="3600" value='06:00'>
+      <input class="form-control" id="lectureTime" type="time" name="lectureTime" step="3600" value="{{lecture['lectureTime']}}">
        </div>
 
        <div class="input-group col-lg-6">
@@ -71,9 +74,10 @@
           <span class="input-group-text ">Lecture Length</span>
        </div>
       <select class="form-control" name="lectureLength">
-    
-        <option value='2'>Two Hours</option>
-        <option value='3'>Three Hours</option>
+         {% set selected = 'selected' if lecture['lectureLength'] == '2' else ''%}
+        <option value='2' {{selected}}>Two Hours</option>
+        {% set selected = 'selected' if lecture['lectureLength'] == '3' else ''%}
+        <option value='3' {{selected}}>Three Hours</option>
       </select>
       </div>
 
@@ -82,8 +86,8 @@
    
 
 
-
-     <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
+      <input type='hidden' name='oldLectureName' value="{{lecture['lectureName']}}"/>
+      <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
     </form>
 
 

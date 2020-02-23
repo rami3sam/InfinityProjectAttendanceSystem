@@ -3,25 +3,23 @@
 {% block body %}
     
   <div class='container col-lg-8  col-sm-12 jumbotron '>
-    <a href="/addStudent"><button class='btn btn-success float-right mb-1'>Add a new student</button></a>
+    <a href="/addLecture"><button class='btn btn-success float-right mb-1'>Add a new lecture</button></a>
 
     <table class='table table-striped'>
         <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th class='d-sm-none d-lg-table-cell d-none'>Major</th>
-            <th class='d-sm-none d-lg-table-cell d-none'>Admission Year</th>
+            <th>Lecture Name</th>
+            <th class='d-sm-none d-lg-table-cell d-none'>Lecture Teacher</th>
+            <th>Lecture Time</th>
             <th></th>
             <th></th>
         </tr>
-        {% for student in students %}
+        {% for lecture in lectures %}
         <tr>
-        <td>{{student.ID}}</td>
-        <td>{{student.name}}</td>
-        <td class='d-sm-none d-lg-table-cell d-none'>{{student.major}}</td>
-        <td class='d-sm-none d-lg-table-cell d-none'>{{student.admissionYear}}</td>   
-        <th><a href="/editStudent/{{student.ID}}"><button class='btn btn-primary'>Edit</button></a></th>
-        <th><button onclick='changeDeleteModal("{{student.ID}}","{{student.name}}")'
+        <td>{{lecture['lectureName']}}</td>
+        <td class='d-sm-none d-lg-table-cell d-none'>{{lecture['lectureTeacher']}}</td>
+        <td >{{lecture['lectureTime']}}</td>   
+        <th><a href="/editLecture/{{lecture['lectureName']}}"><button class='btn btn-primary'>Edit</button></a></th>
+        <th><button onclick='changeDeleteModal("{{lecture['lectureName']}}")'
            class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 
         </tr>
          {% endfor %}
@@ -50,6 +48,6 @@
     </div>
 
 
-   <script type="text/javascript" src="{{ url_for('static', filename = 'js/studentsList.js')}}"></script>
+   <script type="text/javascript" src="{{ url_for('static', filename = 'js/lecturesList.js')}}"></script>
 
 {% endblock %}

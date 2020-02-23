@@ -9,7 +9,7 @@
       <div class="form-group">
       <div class="input-group mb-3 input-group-sm">
 
-      <label for="collegeYear"><span class='d-lg-inline d-none'>Select</span> Admission Year:</label>
+      <label for="admissionYear"><span class='d-lg-inline d-none'>Select</span> Admission Year:</label>
       <select class="form-control" name="admissionYear">
       {% for year in range(now.year , now.year-10,-1)%}
         <option value='{{year}}'>{{year}}</option>

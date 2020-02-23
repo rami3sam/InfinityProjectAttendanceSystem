@@ -4,7 +4,8 @@ from AppClasses import Student
 STUDENTS_COL = 'students'
 SETTINGS_COL = 'settings'
 SHARED_COL = 'shared'
-
+LECTURES_COL = 'lectures'
+LECTURE_TAG = 'lecture'
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 
@@ -66,6 +67,9 @@ class DatabaseClient:
     def getCollegeYears(self):
         return ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
 
+    def getDays(self):
+        return ['Sunday','Monday','Tuesday','Friday','Thursday','Friday',"Saturday"]
+
     def getCameraColors(self):
         return ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']
     
@@ -102,5 +106,13 @@ class DatabaseClient:
 
         if self.appDatabase[columnName].count_documents(selectionCritera) > 0:
             return self.appDatabase[columnName].find_one(selectionCritera)
+        else:
+            return default
+
+    def loadDocuments(self,columnName,documentType,selectionCritera=None,default=None):
+        selectionCritera = self.prepareSelectionCriteria(selectionCritera,documentType)
+
+        if self.appDatabase[columnName].count_documents(selectionCritera) > 0:
+            return self.appDatabase[columnName].find(selectionCritera)
         else:
             return default
