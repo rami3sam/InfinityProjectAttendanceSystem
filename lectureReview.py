@@ -20,7 +20,7 @@ def lectureReview(lectureId):
                 attendanceInfo[date][studentName] = dict()
                 attendanceInfo[date][studentName]['name'] = attendance['name']
                 attendanceInfo[date][studentName]['timesOfRecogniton'] = 0
-            
+                attendanceInfo[date][studentName]['id'] = attendance['id']
             attendanceInfo[date][studentName]['timesOfRecogniton'] += attendance['timesOfRecogniton']
     
     return render_template('lectureReview.html',attendanceInfo=attendanceInfo,enumerate=enumerate)

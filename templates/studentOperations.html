@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{%block title%}Add Student{%endblock%}
+{%block title%}{{operation}} Student{%endblock%}
 {% block body %}
-    
+
   <div class='container col-lg-8 jumbotron '>
-  <form id="addStudentForm"  method="POST" enctype="multipart/form-data" >
-    <h4>Add a new student:</h4>
+  <form id="StudentForm"  method="POST" enctype="multipart/form-data" >
+    <h4>{{operation}} Student:</h4>
 
       <div class="form-group">
       <div class="input-group mb-3 input-group-sm">
@@ -12,14 +12,17 @@
       <label for="admissionYear"><span class='d-lg-inline d-none'>Select</span> Admission Year:</label>
       <select class="form-control" name="admissionYear">
       {% for year in range(now.year , now.year-10,-1)%}
-        <option value='{{year}}'>{{year}}</option>
+      {% set selected = 'selected' if student.admissionYear == year|string else '' %}
+        <option value='{{year}}' {{selected}}>{{year}}</option>
       {% endfor %}    
       </select>
 
         <div class="input-group-prepend">
           <span class="input-group-text "><span class='d-lg-inline d-none'>Student</span> ID:</span>
        </div>
-       <input type="text" pattern="\d*" maxlength="5" name='studentID' class="form-control" required/>
+       {% set idValue = student.ID if operation == 'Edit' else '' %}
+       {% set disabled = 'disabled' if operation == 'Edit' else ''%}
+       <input type="text" pattern="\d{4,5}" name='studentID' class="form-control" {{disabled}} value='{{idValue}}' required/>
      </div>
 
     </div>
@@ -28,7 +31,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text ">Student Name:</span>
        </div>
-       <input type="text" name='studentName' class="form-control" required/>
+       <input type="text" name='studentName' class="form-control" value="{{student.name}}" required/>
      </div>
     </div>
 
@@ -36,7 +39,8 @@
       <label for="collegeYear">Select College Year:</label>
       <select class="form-control" name="collegeYear">
         {% for year in years %}
-        <option value='{{year}}'>{{year}}</option>
+        {% set selected = 'selected' if student.collegeYear == year else ''%}
+        <option value='{{year}}' {{selected}}>{{year}}</option>
         {% endfor %}
       </select>
     </div>
@@ -45,7 +49,8 @@
       <label for="studentMajor">Select Student Major:</label>
       <select class="form-control" name="studentMajor">
         {% for major in majors%}
-        <option value='{{major}}'>{{major}}</option>
+        {% set selected = 'selected' if student.major == major else ''%}
+        <option value='{{major}}' {{selected}}>{{major}}</option>
         {% endfor %}
       </select>
     </div>
@@ -53,14 +58,15 @@
 
 
      <div class="form-group">
+       
         <div class="custom-file">
-          <input name='images[]' type="file" class="custom-file-input"  multiple required>
-          <label class="custom-file-label" for="images">Select Student Images</label>
+          <input name='images[]' type="file" class="custom-file-input"  multiple>
+          <label class="custom-file-label" for="images">Select Student Images To Add</label>
         </div>
     </div>
 
 
-     <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
+     <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">{{operation}}</button>
     </form>
 
 

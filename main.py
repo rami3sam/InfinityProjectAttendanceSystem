@@ -65,16 +65,13 @@ def recognized_students():
     else:
         return '{}'
 
-import deleteStudent
 import studentsList
-import editStudent
-import addStudent
-import generalSettings
+import studentOperations
 import lecturesList
-import addLecture
-import deleteLecture
-import editLecture
+import lectureOperations
 import lectureReview
+import generalSettings
+
 def recogntionProcess(processNumber):
     rec = FaceRecognition.FaceRecognizer(processNumber)
     print('using device : {}'.format(rec.device))
@@ -86,7 +83,7 @@ def runServer():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Infinity Project Attendance System')
-    parser.add_argument('-js' ,dest='just_server',action='store_true',help='just start the server')
+    parser.add_argument('-os' ,dest='just_server',action='store_true',help='only start the server')
     parser.add_argument('-df' ,dest='debug_flask',action='store_true',help='show flask debugging information')
     args = parser.parse_args()
 

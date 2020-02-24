@@ -17,9 +17,9 @@
         <tr>
         <td><a href="/lectureReview/{{lecture['lectureId']}}">{{lecture['lectureName']}}</a></td>
         <td class='d-sm-none d-lg-table-cell d-none'>{{lecture['lectureTeacher']}}</td>
-        <td >{{lecture['lectureTime']}}</td>   
+        <td >{{lecture['lectureTime']}} {{lecture['lectureDay']}}</td>   
         <th><a href="/editLecture/{{lecture['lectureId']}}"><button class='btn btn-primary'>Edit</button></a></th>
-        <th><button onclick='changeDeleteModal("{{lecture['lectureId']}}")'
+        <th><button onclick='changeDeleteModal("{{lecture['lectureId']}}" , "{{lecture['lectureName']}}")'
            class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 
         </tr>
          {% endfor %}
