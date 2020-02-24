@@ -5,12 +5,13 @@ import datetime
 import os
 from AppClasses import Student
 import DatabaseClient
-@app.route('/editLecture/<lectureName>',methods=['GET','POST'])
-def editLecture(lectureName):
+import utilities
+@app.route('/editLecture/<int:lectureId>',methods=['GET','POST'])
+def editLecture(lectureId):
     databaseClient = DatabaseClient.DatabaseClient()
     invalidEditOperation = Response('Invalid edit operation')
     if request.method == 'GET':
-        selectionCriteria = {'lectureName':lectureName}
+        selectionCriteria = {'lectureId':lectureId}
         years = databaseClient.getCollegeYears()
         majors = databaseClient.getMajors()
         days = databaseClient.getDays()
@@ -19,8 +20,6 @@ def editLecture(lectureName):
             return invalidEditOperation
         return render_template('editLecture.html',majors=majors,years=years,days=days,lecture=lecture)
     if request.method == 'POST':
-
-        oldLectureName = request.form.get('oldLectureName')
         lectureName = request.form.get('lectureName')
         lectureTeacher = request.form.get('lectureTeacher')
         lectureMajor = request.form.get('lectureMajor')
@@ -29,13 +28,19 @@ def editLecture(lectureName):
         lectureTime = request.form.get('lectureTime')
         lectureLength = request.form.get('lectureLength')
 
+        lectureStart = utilities.changeTimeFormat(lectureTime)
+        lectureEnd=lectureStart+(int(lectureLength)*3600)
+
         lectureDict = dict(lectureName=lectureName , lectureTeacher=lectureTeacher ,lectureMajor=lectureMajor,
-        lectureYear=lectureYear,lectureDay=lectureDay,lectureTime=lectureTime,lectureLength=lectureLength)
-        selectionCriteria = {'lectureName':oldLectureName}
-        if databaseClient.loadDocument(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG,selectionCriteria):
+        lectureYear=lectureYear,lectureDay=lectureDay,lectureTime=lectureTime,lectureLength=lectureLength,
+        lectureStart=lectureStart,lectureEnd=lectureEnd,lectureId=lectureId)
+
+        selectionCriteria = {'lectureId':lectureId}
+        lectureDocument = databaseClient.loadDocument(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG,selectionCriteria)
+        if lectureDocument:
             databaseClient.deleteDocument(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG,selectionCriteria)
             databaseClient.saveDocument(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG,lectureDict)
             flash('Lecture was added successfully','success')
         else:
             return invalidEditOperation
-        return redirect(f'/editLecture/{lectureName}')
+        return redirect(f'/editLecture/{lectureId}')

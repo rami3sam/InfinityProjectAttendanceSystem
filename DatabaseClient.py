@@ -6,6 +6,8 @@ SETTINGS_COL = 'settings'
 SHARED_COL = 'shared'
 LECTURES_COL = 'lectures'
 LECTURE_TAG = 'lecture'
+ATTENDANCE_COL = 'attendance'
+ATTENDANCE_TAG = 'ATTENDANCE'
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 
@@ -116,3 +118,14 @@ class DatabaseClient:
             return self.appDatabase[columnName].find(selectionCritera)
         else:
             return default
+    
+    def getDistinctValues(self,columnName,documentType,field,selectionCritera=None):
+        selectionCritera = self.prepareSelectionCriteria(selectionCritera,documentType)
+        return self.appDatabase[columnName].distinct(field,selectionCritera)
+
+    def getNextSequenceNumber(self,sequenceName):
+        sequenceDocument = self.appDatabase['counters'].find_one_and_update(filter={'_id':sequenceName},
+        update={'$inc': {'sequence_value' : 1}},upsert=True )
+        if sequenceDocument is None:
+            return 0
+        return sequenceDocument['sequence_value']

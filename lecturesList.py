@@ -5,4 +5,6 @@ from flask import render_template
 def lecturesList(pageNo):
     databaseClient = DatabaseClient.DatabaseClient()
     lectures = databaseClient.loadDocuments(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG)
+    if lectures is None:
+        lectures = []
     return render_template('lecturesList.html',lectures=lectures)

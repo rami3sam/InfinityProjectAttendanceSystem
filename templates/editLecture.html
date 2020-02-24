@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%block title%}Add Lecture{%endblock%}
+{%block title%}Edit Lecture{%endblock%}
 {% block body %}
     
   <div class='container col-lg-8 jumbotron '>
@@ -82,10 +82,7 @@
       </div>
 
     </div>
-
-   
-
-
+    
       <input type='hidden' name='oldLectureName' value="{{lecture['lectureName']}}"/>
       <button type='submit' class="btn btn-primary col-lg-4 justify-self-center">Add</button>
     </form>

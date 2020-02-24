@@ -16,6 +16,8 @@ from facenet_pytorch import InceptionResnetV1
 from AppClasses import Student,MTCNNFaceDetector,RecognitionResult,Embeddings
 import DatabaseClient
 import time
+import datetime
+import utilities
 recognizedStudentsLists = []
 
 ATTENDANCE_TAKING_FREQ = 5
@@ -208,7 +210,7 @@ class FaceRecognizer:
                 else:
                     studentsJsonList[student.ID]['cameraID'].append(recognizedStudent.cameraID)
                     studentsJsonList[student.ID]['colorMarkers'].append(self.CAM_COLORS[recognizedStudent.cameraID])
-        self.databaseClient.saveDocument('shared','STUDENTS_JSON_LIST',studentsJsonList)
+        self.databaseClient.saveDocument(DatabaseClient.SHARED_COL,'STUDENTS_JSON_LIST',studentsJsonList)
         
         
 
@@ -224,14 +226,30 @@ class FaceRecognizer:
                 selectionCriteria = {'$and' :  [{'id':student.ID},{'recogntionTime':recogntionTime}] }
 
                 if self.databaseClient.loadDocument(ATTENDANCE_COL,ATTENDANCE_TAG,selectionCriteria) is None:
-                   
-                    thisStudent = dict()
-                    thisStudent['id'] = student.ID
-                    thisStudent['name'] = student.name
-                    thisStudent['cameraID'] = [recognizedStudent.cameraID]
-                    thisStudent['timesOfRecogniton'] = 1
-                    thisStudent['recogntionTime'] = recogntionTime
-                    self.databaseClient.saveDocument(ATTENDANCE_COL,ATTENDANCE_TAG,thisStudent)
+                    dt = datetime.datetime.fromtimestamp(now)
+                    today = dt.strftime('%A').lower()
+                    time_string = dt.strftime('%H:%M')
+                    timeAsSeconds = utilities.changeTimeFormat(time_string)
+                    selectionCriteriaLecture = {'$and': [{'lectureDay':re.compile(today, re.IGNORECASE)} , 
+                    {'lectureStart':{'$lt':timeAsSeconds} } , {'lectureEnd':{'$gt':timeAsSeconds}}  ]}
+                    
+                    lecture = self.databaseClient.loadDocument(DatabaseClient.LECTURES_COL
+                    ,DatabaseClient.LECTURE_TAG,selectionCriteriaLecture)
+                    
+
+                    attendanceInfo = dict()
+                    attendanceInfo['id'] = student.ID
+                    attendanceInfo['name'] = student.name
+                    attendanceInfo['cameraID'] = [recognizedStudent.cameraID]
+                    attendanceInfo['timesOfRecogniton'] = 1
+                    attendanceInfo['recogntionTime'] = recogntionTime
+                    attendanceInfo['day'] = today
+                    attendanceInfo['date'] = dt.strftime(r'%Y-%m-%d')
+                    if lecture is not None:
+                        attendanceInfo['lectureId'] = lecture['lectureId']
+                    else:
+                        attendanceInfo['lectureId'] = -1
+                    self.databaseClient.saveDocument(ATTENDANCE_COL,ATTENDANCE_TAG,attendanceInfo)
                 else:
                  
                     updateQuery = {'$inc' : {'timesOfRecogniton':1} , '$addToSet': {'cameraID' : recognizedStudent.cameraID} }

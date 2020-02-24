@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%block title%}Students List{%endblock%}
+{%block title%}Lectures List{%endblock%}
 {% block body %}
     
   <div class='container col-lg-8  col-sm-12 jumbotron '>
@@ -15,11 +15,11 @@
         </tr>
         {% for lecture in lectures %}
         <tr>
-        <td>{{lecture['lectureName']}}</td>
+        <td><a href="/lectureReview/{{lecture['lectureId']}}">{{lecture['lectureName']}}</a></td>
         <td class='d-sm-none d-lg-table-cell d-none'>{{lecture['lectureTeacher']}}</td>
         <td >{{lecture['lectureTime']}}</td>   
-        <th><a href="/editLecture/{{lecture['lectureName']}}"><button class='btn btn-primary'>Edit</button></a></th>
-        <th><button onclick='changeDeleteModal("{{lecture['lectureName']}}")'
+        <th><a href="/editLecture/{{lecture['lectureId']}}"><button class='btn btn-primary'>Edit</button></a></th>
+        <th><button onclick='changeDeleteModal("{{lecture['lectureId']}}")'
            class='btn btn-danger' data-toggle="modal" data-target="#myModal">Delete</button></th> 
         </tr>
          {% endfor %}

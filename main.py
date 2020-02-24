@@ -56,7 +56,7 @@ def video_viewer(cameraID):
 
 @app.route('/recognized_students')
 def recognized_students():
-    studentsJsonList = databaseClient.loadDocument('shared','STUDENTS_JSON_LIST')
+    studentsJsonList = databaseClient.loadDocument(DatabaseClient.SHARED_COL,'STUDENTS_JSON_LIST')
     if studentsJsonList is not None:
         del studentsJsonList['_id']
         del studentsJsonList['documentType']
@@ -74,7 +74,7 @@ import lecturesList
 import addLecture
 import deleteLecture
 import editLecture
-
+import lectureReview
 def recogntionProcess(processNumber):
     rec = FaceRecognition.FaceRecognizer(processNumber)
     print('using device : {}'.format(rec.device))

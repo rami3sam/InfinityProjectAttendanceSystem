@@ -5,6 +5,8 @@ import os
 import datetime
 from AppClasses import Student
 import DatabaseClient
+import utilities
+
 @app.route('/addLecture',methods=['GET','POST'])
 def addLecture():
     databaseClient = DatabaseClient.DatabaseClient()
@@ -23,8 +25,13 @@ def addLecture():
         lectureTime = request.form.get('lectureTime')
         lectureLength = request.form.get('lectureLength')
 
+        
+        lectureStart = utilities.changeTimeFormat(lectureTime)
+        lectureEnd=lectureStart+(int(lectureLength)*3600)
+        lectureId = databaseClient.getNextSequenceNumber('lectureId')
         lectureDict = dict(lectureName=lectureName , lectureTeacher=lectureTeacher ,lectureMajor=lectureMajor,
-        lectureYear=lectureYear,lectureDay=lectureDay,lectureTime=lectureTime,lectureLength=lectureLength)
+        lectureYear=lectureYear,lectureDay=lectureDay,lectureTime=lectureTime,lectureLength=lectureLength,
+        lectureStart=lectureStart,lectureEnd=lectureEnd,lectureId=lectureId)
 
         databaseClient.saveDocument(DatabaseClient.LECTURES_COL,DatabaseClient.LECTURE_TAG,lectureDict)
         flash('Lecture was added successfully','success')

@@ -5,6 +5,7 @@ import os
 import datetime
 from AppClasses import Student
 import DatabaseClient
+
 @app.route('/addStudent',methods=['GET','POST'])
 def addStudent():
     databaseClient = DatabaseClient.DatabaseClient()

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{%block title%}Lecture Review{%endblock%}
+{% block body %}
+    
+  <div class='container col-lg-8  col-sm-12 jumbotron '>
+<div id="accordion">  
+  {% for i,date in enumerate(attendanceInfo) %}
+    <div class="card">
+      <div class="card-header">
+        <a class="collapsed card-link" data-toggle="collapse" href="#collapse{{i}}">
+          {{date}}
+        </a>
+      </div>
+      <div id="collapse{{i}}" class="collapse" data-parent="#accordion">
+        <div class="card-body">
+
+    {% for studentName in  attendanceInfo[date] %}
+        <p>{{attendanceInfo[date][studentName]['name']}}</p>
+        <p>{{attendanceInfo[date][studentName]['timesOfRecogniton']}}</p>
+    {%endfor%}
+  </div>
+</div>
+</div>
+
+  {%endfor%}
+{% endblock %}
