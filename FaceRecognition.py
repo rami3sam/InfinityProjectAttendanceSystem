@@ -51,7 +51,8 @@ class FaceRecognizer:
         self.CAMERA_IP_ADDRESSES  = self.databaseClient.getSettings('cameraIPS',['127.0.0.1'])
         self.CAM_COLORS = self.databaseClient.getCameraColors()
         self.camerasNumber = len(self.CAMERA_IP_ADDRESSES)
-        self.calculateExistingStudentsEmbeddings()
+        if self.processNumber == 0:
+            self.calculateExistingStudentsEmbeddings()
 
     def calculateExistingStudentsEmbeddings(self):
         for studentID in self.students:
@@ -61,6 +62,7 @@ class FaceRecognizer:
         return 'PROC {:02} CAM {:02}:'.format(self.processNumber,cameraID)
 
     def calculateStudentEmbeddings(self,studentID):
+        label = f'PROC {self.processNumber:02}:'
         studentDirPath = os.path.join("students_photos",studentID)
         if self.databaseClient.checkForStudentExistence(studentID):
             student = self.databaseClient.getStudentByID(studentID,False)
@@ -84,9 +86,9 @@ class FaceRecognizer:
                         imagePathCropped = os.path.join(dirpath ,'cropped', filename)
                         _,detectedFace = self.faceDetector.detectFace(image,imagePathCropped,False)
                         
-                        print('Calculating embeddings for : {}'.format(imagePath))
+                        print(label,'Calculating embeddings for : {}'.format(imagePath))
                         if detectedFace is None:
-                            print('Couldn\'t find faces in  : {}\n'.format(imagePath))
+                            print(label,'Couldn\'t find faces in  : {}\n'.format(imagePath))
                             continue
                     
                         detectedFace = torch.stack([detectedFace[0]]).to(self.device)
@@ -96,7 +98,7 @@ class FaceRecognizer:
 
                         embeddingsList.append(embeddings)
                         processedPhotos.append(filename)
-                        print('Successfully done : {}\n'.format(imagePath))
+                        print(label,'Successfully done : {}\n'.format(imagePath))
                       
             self.databaseClient.updateEmbeddings(studentID,embeddingsList,processedPhotos)
             break
