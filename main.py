@@ -93,16 +93,13 @@ if __name__ == '__main__':
     
     serverThread = threading.Thread(target=runServer)
     serverThread.start()
-    time.sleep(5)
-    print('flask server started. ')
+    print('flask server started.')
 
     if args.just_server == False:
-        for index in range(3):
+        for index in range(1):
             process = multiprocessing.Process(target=recogntionProcess,args=[index])
             process.start()
-        time.sleep(5)
 
-        videoRecording.startWritingVideo()
     
     
     

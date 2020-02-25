@@ -18,6 +18,7 @@ import DatabaseClient
 import time
 import datetime
 import utilities
+import videoRecording
 recognizedStudentsLists = []
 
 ATTENDANCE_TAKING_FREQ = 5
@@ -30,7 +31,7 @@ ATTENDANCE_TAG = 'ATTENDANCE'
 def hexToRGB(hex):
     hex = hex.lstrip('#')
     hex = '{}{}{}'.format(hex[4:6],hex[2:4],hex[0:2])
-    return tuple(int(hex[processNumber:processNumber+2], 16) for processNumber in (0, 2, 4))
+    return tuple(int(hex[byte:byte+2], 16) for byte in (0, 2, 4))
 
 
 class FaceRecognizer:
@@ -43,6 +44,7 @@ class FaceRecognizer:
         self.attendance = dict()
         self.attendanceFilename = f'output/Attendance-{datetime.datetime.now()}.txt'
         self.minutesCounter = 0
+        self.isCameraRecording = dict()
         self.reload()
         
 
@@ -201,6 +203,7 @@ class FaceRecognizer:
         self.databaseClient.deleteDocument('shared','STUDENTS_JSON_LIST')
         for recognizedStudentsList in cameraRecognizedStudentLists:
             for recognizedStudent in recognizedStudentsList:
+                
                 if studentsJsonList.get(recognizedStudent.studentID,None) == None:
                     recongizedStudentID = recognizedStudent.studentID
                     student = self.databaseClient.getStudentByID(recongizedStudentID,False)
@@ -261,7 +264,7 @@ class FaceRecognizer:
     def recognize(self):
         self.reload()
         cameraID = 0
-        cameraRecognizedStudentLists = [[None]] * self.camerasNumber
+        cameraRecognizedStudentLists = [[]] * self.camerasNumber
         cameraFrames = [[None]] * self.camerasNumber
         for _ in range(0,self.camerasNumber):
            
@@ -272,6 +275,7 @@ class FaceRecognizer:
 
             cameraFrames[cameraID],cameraRecognizedStudentList = self.processCameraFrame(cameraID,cameraFrame)
             cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
+            
             self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
     
             self.pushAttendance(cameraRecognizedStudentLists)
@@ -283,6 +287,9 @@ class FaceRecognizer:
 
             if cameraFrames[cameraID] is not None:
                 cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
+                if self.isCameraRecording.get(cameraID,False) == False:
+                    videoRecording.startWritingVideo(cameraID)
+                    self.isCameraRecording[cameraID] = True
                 try:
                     os.rename(imageFilenameTemp,imageFilename)
                 except:

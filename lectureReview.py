@@ -12,7 +12,7 @@ def lectureReview(lectureId):
         if attendanceInfo.get(date,None) is None:
             attendanceInfo[date] = dict()
 
-        selectionCriteria = {'date':date}
+        selectionCriteria = {'date':date,'lectureId':lectureId}
         attendanceList = databaseClient.loadDocuments(DatabaseClient.ATTENDANCE_COL,DatabaseClient.ATTENDANCE_TAG,selectionCriteria)
         for attendance in attendanceList:
             studentName = attendance['name']
