@@ -25,7 +25,6 @@ ATTENDANCE_TAKING_FREQ = 5
 MAX_CAM_NO = 8
 CAMERA_URL_TEMP = 'http://{}:{}/photo.jpg'
 THRESHOLD=0.9
-TIME_PERIOD = 5
 ATTENDANCE_COL = 'attendance'
 ATTENDANCE_TAG = 'ATTENDANCE'
 def hexToRGB(hex):
@@ -221,7 +220,7 @@ class FaceRecognizer:
 
     def pushAttendance(self,cameraRecognizedStudentLists):
         now = time.time()
-        recogntionTime = now - ( now % TIME_PERIOD )
+        recogntionTime = now - ( now % self.databaseClient.getTimePeriod() )
         for recognizedStudentsList in cameraRecognizedStudentLists:
             for recognizedStudent in recognizedStudentsList:
                 recongizedStudentID = recognizedStudent.studentID
@@ -287,14 +286,17 @@ class FaceRecognizer:
 
             if cameraFrames[cameraID] is not None:
                 cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
-                if self.isCameraRecording.get(cameraID,False) == False:
-                    videoRecording.startWritingVideo(cameraID)
-                    self.isCameraRecording[cameraID] = True
                 try:
                     os.rename(imageFilenameTemp,imageFilename)
                 except:
                     pass
 
+                if self.processNumber == 0:
+                    if self.isCameraRecording.get(cameraID,False) == False:
+                        videoRecording.startWritingVideo(cameraID)
+                        self.isCameraRecording[cameraID] = True
+
+                        
             cameraID+=1
 
     

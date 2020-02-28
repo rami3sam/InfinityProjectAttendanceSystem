@@ -26,7 +26,7 @@ def editLecture(lectureId=None):
         else:
             operation = 'Edit'
 
-        return render_template('lectureOperations.html',majors=majors,years=years,days=days,lecture=lecture,operation=operation)
+        return render_template('lectureOperations.html',majors=majors,years=years,days=days,lecture=lecture,operation=operation,len=len,str=str)
     if request.method == 'POST':
         lectureName = request.form.get('lectureName')
         lectureTeacher = request.form.get('lectureTeacher')
@@ -37,7 +37,7 @@ def editLecture(lectureId=None):
         lectureLength = request.form.get('lectureLength')
 
         lectureStart = utilities.changeTimeFormat(lectureTime)
-        lectureEnd=lectureStart+(int(lectureLength)*3600)
+        lectureEnd=lectureStart+(int(float(lectureLength)*3600))
 
         
 

@@ -23,13 +23,28 @@
             <tr>
               <th>ID</th>
               <th>Name</th>
-              <th>Recogntion Times</th>
+              <th>Percentage</th>
             </tr>
     {% for studentName in  attendanceInfo[date] %}
       <tr>
         <td>{{attendanceInfo[date][studentName]['id']}}</td>
         <td>{{attendanceInfo[date][studentName]['name']}}</td>
-        <td>{{attendanceInfo[date][studentName]['timesOfRecogniton']}}</td>
+        {% set  percentage = attendanceInfo[date][studentName]['attendancePercentage']|int %}
+        <td>
+          {% if percentage >= 75%}
+            {% set progessType='success'%}
+          {% elif percentage >= 50%}
+            {% set progessType='info'%}
+          {% elif percentage >= 25%}
+            {% set progessType='warning'%}
+          {% elif percentage >= 0%}
+            {% set progessType='danger'%}
+          {% endif %}
+
+          <div class="progress" style='height:30px;' data-toggle="tooltip" title='Recognition Times: {{attendanceInfo[date][studentName]["timesOfRecogniton"]}}'>
+            <div class="progress-bar bg-{{progessType}}" role="progressbar" style="width: {{percentage if percentage >=10 else '10'}}%"  aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100">{{percentage}}%</div>
+          </div>
+        </td>
       </tr>
     {%endfor%}
   </table>

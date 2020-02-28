@@ -68,7 +68,7 @@
        </div>
 
        {% set timeValue = lecture['lectureTime'] if operation == 'Edit' else '06:00'%}
-      <input class="form-control" id="lectureTime" type="time" name="lectureTime" step="3600" value="{{timeValue}}">
+      <input class="form-control" id="lectureTime" type="time" name="lectureTime" step="300" value="{{timeValue}}">
        </div>
 
        <div class="input-group col-lg-6">
@@ -76,10 +76,14 @@
           <span class="input-group-text ">Lecture Length</span>
        </div>
       <select class="form-control" name="lectureLength">
-         {% set selected = 'selected' if lecture['lectureLength'] == '2' else ''%}
-        <option value='2' {{selected}}>Two Hours</option>
-        {% set selected = 'selected' if lecture['lectureLength'] == '3' else ''%}
-        <option value='3' {{selected}}>Three Hours</option>
+        {% set lengthValues = ['0.25','0.5','1','2','3']%}
+        {% set lengthNames = ['Quarter an hour(Experimental)','Half an hour(Experimental)','An Hour(Experimental)','Two Hours',"Three Hours"]%}
+        
+        
+        {% for i in range(len(lengthValues)) %}
+        {% set selected = 'selected' if lecture['lectureLength'] == str(lengthValues[i]) else ''%}
+        <option value='{{lengthValues[i]}}' {{selected}}>{{lengthNames[i]}}</option>
+        {%endfor%}
       </select>
       </div>
 

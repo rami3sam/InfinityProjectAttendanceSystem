@@ -12,6 +12,7 @@ STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
 FPS = 24
 MAX_CAM_NO = 8
+ 
 
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 def allowed_file(filename):
@@ -30,6 +31,12 @@ class DatabaseClient:
         databaseQuery = {'ID':studentID}
         return Student(self.appDatabase[STUDENTS_COL].find_one(databaseQuery),decodeEmbeddings)
     
+    def getTimePeriod(self):
+        return 60
+
+    def getPeriodThreshold(self):
+        return 10
+
     def setSettings(self,name,value):
         if self.appDatabase[SETTINGS_COL].count_documents({'settingsType':name}) == 0:
             self.appDatabase[SETTINGS_COL].insert_one({'settingsType':name,name:value})
