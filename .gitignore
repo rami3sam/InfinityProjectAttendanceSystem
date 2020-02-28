@@ -14,3 +14,7 @@ test.py
 .ipython
 .local
 log.txt
+.project
+.pydevproject
+.settings/
+

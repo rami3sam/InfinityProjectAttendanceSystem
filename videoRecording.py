@@ -6,62 +6,74 @@ import multiprocessing
 import DatabaseClient
 import pytz
 
-
+def writeSubtitleSequence(subtitleFilename,subtitleText,sequenceNumber,startTime,endTime):
+    startTimeDT = datetime.datetime.fromtimestamp(startTime,tz=pytz.utc)
+    endTimeDT = datetime.datetime.fromtimestamp(endTime,tz=pytz.utc)
+    
+    startTimeFormatted = '{},{:03d}'.format(startTimeDT.strftime('%H:%M:%S'),int(startTimeDT.strftime('%f'))//1000)
+    endTimeFormatted ='{},{:03d}'.format(endTimeDT.strftime('%H:%M:%S'),int(endTimeDT.strftime('%f'))//1000)
+    subtitle = f'{sequenceNumber}\n{startTimeFormatted} --> {endTimeFormatted}\n{subtitleText}\n'
+    with open(subtitleFilename,'a+') as f:
+        print(subtitle,file=f)
 
 def writeVideo(cameraID):
     databaseClient = DatabaseClient.DatabaseClient()
     FPS = DatabaseClient.FPS
-    attendanceJsonOld = None
- 
-    i=1
+    postFix = f'{cameraID}_{datetime.datetime.now()}'
+    cameraFrameFilename = f'shared/CAM_{cameraID}.jpg'
+    subtitleFilename = f'output/CAM_{postFix}.srt'
+    videoFilename = f'output/CAM_{postFix}.avi'
+    
     os.makedirs('output',exist_ok=True)
+
+    counter=1
     startTime = 0
-    subText = None
+    attendanceJsonOld = None
+    subtitleText = None
     
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
+    frame = cv2.imread(cameraFrameFilename)
     if frame is None:
         exit(1)
     height, width = frame.shape[:2]
-    postFix = f'{cameraID}_{datetime.datetime.now()}'
 
-    videoWriter = cv2.VideoWriter(f'output/CAM_{postFix}.avi', fourcc, FPS, (width,height))
+    videoWriter = cv2.VideoWriter(videoFilename, fourcc, FPS, (width,height))
     print(f'starting to write camera {cameraID} output to harddisk')
-    while True:
-        attendanceJson = databaseClient.loadDocument(DatabaseClient.SHARED_COL,'STUDENTS_JSON_LIST')
-        if attendanceJson is not None: del attendanceJson['_id'];del attendanceJson['documentType']
-
-        if attendanceJson is not None and (attendanceJson != attendanceJsonOld or attendanceJsonOld is None):
-            if subText is not None:
-                subtitle = f'{i}\n{startTimeStr} --> {endTimeStr}\n{subText}\n'
-                with open(f'output/CAM_{postFix}.srt','a+') as f:
-                    print(subtitle,file=f)
-
-            startTime = i*(1/FPS) 
-            dt = datetime.datetime.fromtimestamp(startTime,tz=pytz.utc)
-            startTimeStr = '{},{:03d}'.format(dt.strftime('%H:%M:%S'),int(dt.strftime('%f'))//1000)
-        
-            subText = ''
-            
+    try:
+        while True:
+            attendanceJson = databaseClient.loadDocument(DatabaseClient.SHARED_COL,'STUDENTS_JSON_LIST')
             if attendanceJson is not None:
-                for idKey in attendanceJson:
-                    student = attendanceJson[idKey]
-                    subText+= f'{idKey}:{student["name"]}'
-
-            attendanceJsonOld = attendanceJson
-            if subText == '':
-                subText='No person was detected'
-
-        endTime = i*(1/FPS) 
-        dt = datetime.datetime.fromtimestamp(endTime,tz=pytz.utc)
-        endTimeStr ='{},{:03d}'.format(dt.strftime('%H:%M:%S'),int(dt.strftime('%f'))//1000)
-   
-
+                 del attendanceJson['_id']
+                 del attendanceJson['documentType']
+    
+            if attendanceJson is not None and (attendanceJson != attendanceJsonOld or attendanceJsonOld is None):
+                if subtitleText is not None:
+                    writeSubtitleSequence(subtitleFilename,subtitleText,counter,startTime,endTime)
+    
+                startTime = counter*(1/FPS)             
+                subtitleText = ''
+                
+                if attendanceJson is not None:
+                    for studentID in attendanceJson:
+                        student = attendanceJson[studentID]
+                        subtitleText+= f'{studentID}:{student["name"]}'
+    
+                attendanceJsonOld = attendanceJson
+                if subtitleText == '':
+                    subtitleText='No person was detected'
+    
+            endTime = counter*(1/FPS) 
             
-        i+=1
-        frame = cv2.imread(f'shared/CAM_{cameraID}.jpg')
-        videoWriter.write(frame)
-        time.sleep(1/FPS)
+            counter+=1
+            frame = cv2.imread(cameraFrameFilename)
+            
+            videoWriter.write(frame)
+            time.sleep(1/FPS)
+    except:
+        writeSubtitleSequence(subtitleFilename,subtitleText,counter,startTime,endTime)
+        
+        
 def startWritingVideo(cameraNumber):
     process = multiprocessing.Process(target=writeVideo,args=[f'{cameraNumber:02d}'])
     process.start()
+    
