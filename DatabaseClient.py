@@ -10,7 +10,7 @@ ATTENDANCE_COL = 'attendance'
 ATTENDANCE_TAG = 'ATTENDANCE'
 STUDENTS_PHOTOS_DIR = 'students_photos'
 DETECTED_FACES_DIR = 'detected_faces'
-
+FPS = 24
 MAX_CAM_NO = 8
 
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
