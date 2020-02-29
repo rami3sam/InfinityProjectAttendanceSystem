@@ -56,15 +56,20 @@ def writeVideo(cameraID):
                 if attendanceJson is not None:
                     for studentID in attendanceJson:
                         student = attendanceJson[studentID]
-                        subtitleText+= f'{studentID}:{student["name"]}'
+                        cameraIDInt = int(cameraID)
+                        if cameraIDInt in student['cameraIDs']:
+                            cameraIDIndex = student['cameraIDs'].index(cameraIDInt)
+                            errorValue = student['errorValues'][cameraIDIndex]
+                            subtitleText+= f'{studentID}:{student["studentName"]}:{errorValue:.6f}\n'
     
                 attendanceJsonOld = attendanceJson
                 if subtitleText == '':
                     subtitleText='No person was detected'
-    
+
+            counter+=1
             endTime = counter*(1/FPS) 
             
-            counter+=1
+            
             frame = cv2.imread(cameraFrameFilename)
             
             videoWriter.write(frame)

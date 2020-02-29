@@ -77,7 +77,7 @@ class DatabaseClient:
         return ['First Year' ,'Second Year','Third Year','Fourth Year','Fifth Year']
 
     def getDays(self):
-        return ['Sunday','Monday','Tuesday','Friday','Thursday','Friday',"Saturday"]
+        return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday',"Saturday"]
 
     def getCameraColors(self):
         return ['#FF0000' , '#00FF00','#0000FF','#FFF000','#000FFF','#FF00FF','#F0000F','#0FFFF0']

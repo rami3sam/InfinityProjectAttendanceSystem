@@ -208,12 +208,14 @@ class FaceRecognizer:
                     student = self.databaseClient.getStudentByID(recongizedStudentID,False)
                     studentsJsonList[student.ID] = dict()
                     
-                    studentsJsonList[student.ID]['name'] = student.name
-                    studentsJsonList[student.ID]['cameraID'] = [recognizedStudent.cameraID]
+                    studentsJsonList[student.ID]['studentName'] = student.name
+                    studentsJsonList[student.ID]['errorValues'] = [recognizedStudent.errorValue]
+                    studentsJsonList[student.ID]['cameraIDs'] = [recognizedStudent.cameraID]
                     studentsJsonList[student.ID]['colorMarkers'] = [self.CAM_COLORS[recognizedStudent.cameraID]]
                 else:
-                    studentsJsonList[student.ID]['cameraID'].append(recognizedStudent.cameraID)
+                    studentsJsonList[student.ID]['cameraIDs'].append(recognizedStudent.cameraID)
                     studentsJsonList[student.ID]['colorMarkers'].append(self.CAM_COLORS[recognizedStudent.cameraID])
+                    studentsJsonList[student.ID]['errorValues'].append(recognizedStudent.errorValue)
         self.databaseClient.saveDocument(DatabaseClient.SHARED_COL,'STUDENTS_JSON_LIST',studentsJsonList)
         
         
@@ -227,7 +229,7 @@ class FaceRecognizer:
                 student = self.databaseClient.getStudentByID(recongizedStudentID,False)
             
             
-                selectionCriteria = {'$and' :  [{'id':student.ID},{'recogntionTime':recogntionTime}] }
+                selectionCriteria = {'$and' :  [{'ID':student.ID},{'recogntionTime':recogntionTime}] }
 
                 if self.databaseClient.loadDocument(ATTENDANCE_COL,ATTENDANCE_TAG,selectionCriteria) is None:
                     dt = datetime.datetime.fromtimestamp(now)
@@ -242,8 +244,8 @@ class FaceRecognizer:
                     
 
                     attendanceInfo = dict()
-                    attendanceInfo['id'] = student.ID
-                    attendanceInfo['name'] = student.name
+                    attendanceInfo['ID'] = student.ID
+                    attendanceInfo['studentName'] = student.name
                     attendanceInfo['cameraID'] = [recognizedStudent.cameraID]
                     attendanceInfo['timesOfRecogniton'] = 1
                     attendanceInfo['recogntionTime'] = recogntionTime
@@ -275,7 +277,7 @@ class FaceRecognizer:
             cameraFrames[cameraID],cameraRecognizedStudentList = self.processCameraFrame(cameraID,cameraFrame)
             cameraRecognizedStudentLists[cameraID] = cameraRecognizedStudentList
             
-            self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
+            
     
             self.pushAttendance(cameraRecognizedStudentLists)
             
@@ -298,7 +300,7 @@ class FaceRecognizer:
 
                         
             cameraID+=1
-
+        self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
     
 
 

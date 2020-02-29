@@ -15,7 +15,7 @@ $.ajax({
       var json = JSON.parse(jsonText);
       for(let key in json){
         var studentID = key.toString().padStart(4,'0');
-        var studentName=json[key]['name'];
+        var studentName=json[key]['studentName'];
         var colorsCount = json[key]['colorMarkers'].length;
         var colorSize = 100/colorsCount;
 

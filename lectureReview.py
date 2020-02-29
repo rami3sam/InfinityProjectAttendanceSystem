@@ -24,16 +24,16 @@ def lectureReview(lectureId):
         selectionCriteria = {'date':date,'lectureId':lectureId}
         attendanceList = databaseClient.loadDocuments(DatabaseClient.ATTENDANCE_COL,DatabaseClient.ATTENDANCE_TAG,selectionCriteria)
         for attendance in attendanceList:
-            studentName = attendance['name']
+            studentName = attendance['studentName']
             if attendanceInfo[date].get(studentName,None) is None:
                 attendanceInfo[date][studentName] = dict()
-                attendanceInfo[date][studentName]['name'] = attendance['name']
+                attendanceInfo[date][studentName]['studentName'] = attendance['studentName']
                 attendanceInfo[date][studentName]['timesOfRecogniton'] = 0
-                attendanceInfo[date][studentName]['id'] = attendance['id']
+                attendanceInfo[date][studentName]['ID'] = attendance['ID']
            
                 attendanceInfo[date][studentName]['attendancePercentage'] = 0
             attendanceInfo[date][studentName]['timesOfRecogniton'] += attendance['timesOfRecogniton']
             if attendance['timesOfRecogniton'] >= Threshold:
                 attendanceInfo[date][studentName]['attendancePercentage'] += periodPercentage
-    
+               
     return render_template('lectureReview.html',attendanceInfo=attendanceInfo,enumerate=enumerate)

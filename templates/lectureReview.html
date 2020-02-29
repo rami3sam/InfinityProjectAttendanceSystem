@@ -27,8 +27,8 @@
             </tr>
     {% for studentName in  attendanceInfo[date] %}
       <tr>
-        <td>{{attendanceInfo[date][studentName]['id']}}</td>
-        <td>{{attendanceInfo[date][studentName]['name']}}</td>
+        <td>{{attendanceInfo[date][studentName]['ID']}}</td>
+        <td>{{attendanceInfo[date][studentName]['studentName']}}</td>
         {% set  percentage = attendanceInfo[date][studentName]['attendancePercentage']|int %}
         <td>
           {% if percentage >= 75%}
