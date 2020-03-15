@@ -267,7 +267,7 @@ class FaceRecognizer:
         cameraID = 0
         cameraRecognizedStudentLists = [[]] * self.camerasNumber
         cameraFrames = [[None]] * self.camerasNumber
-        for _ in range(0,self.camerasNumber):
+        for cameraID in range(0,self.camerasNumber):
            
 
             cameraFrame = self.getFrameFromCamera(cameraID)
@@ -281,11 +281,13 @@ class FaceRecognizer:
     
             self.pushAttendance(cameraRecognizedStudentLists)
             
+            
+       
+        for cameraID in range(0,self.camerasNumber):
             os.makedirs(f'shared/',exist_ok=True)
             imageFilenameTemp = f'shared/CAM_{cameraID:02d}~.jpg'
             imageFilename = f'shared/CAM_{cameraID:02d}.jpg'
-       
-
+            
             if cameraFrames[cameraID] is not None:
                 cv2.imwrite(imageFilenameTemp,cameraFrames[cameraID])
                 try:
@@ -297,9 +299,7 @@ class FaceRecognizer:
                     if self.isCameraRecording.get(cameraID,False) == False:
                         videoRecording.startWritingVideo(cameraID)
                         self.isCameraRecording[cameraID] = True
-
-                        
-            cameraID+=1
+ 
         self.getRecognizedStudentsJSON(cameraRecognizedStudentLists)
     
 

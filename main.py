@@ -77,6 +77,7 @@ def recogntionProcess(processNumber):
     print('using device : {}'.format(rec.device))
     while True:
         rec.recognize()
+        
 
 def runServer():
     app.run(host='0.0.0.0', threaded=True)

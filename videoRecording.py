@@ -26,7 +26,7 @@ def writeVideo(cameraID):
     
     os.makedirs('output',exist_ok=True)
 
-    counter=1
+    counter=0
     startTime = 0
     attendanceJsonOld = None
     subtitleText = None

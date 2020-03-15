@@ -6,7 +6,7 @@ collegeYear = "Fifth Year"
 admissionYear = "2014"
 studentMajor = "Electronic Engineering"
 studentID = 10000
-directoryPath = '/home/rami3sam/Database pics'
+directoryPath = '/home/rami3sam/Test Photos/Camera'
 if __name__ == '__main__':
     databaseClient = DatabaseClient.DatabaseClient()
     for (dirpath, dirnames, filenames) in os.walk(directoryPath):
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
             student = Student()
 
-            student.ID = studentID
+            student.ID = str(studentID)
             student.name = directory
             student.major = studentMajor
             student.collegeYear = collegeYear
